@@ -1,6 +1,10 @@
 var gl;
 
 function initGL(canvas) {
+    
+    canvas.width = document.body.clientWidth;
+    canvas.height = document.body.clientHeight;
+    
     try {
         gl = canvas.getContext("experimental-webgl");
         gl.viewportWidth = canvas.width;
@@ -100,6 +104,7 @@ function handleLoadedTexture(texture) {
 
 var moonTexture;
 var crateTexture;
+var sunTexture;
 
 function initTextures() {
     moonTexture = gl.createTexture();
@@ -107,7 +112,7 @@ function initTextures() {
     moonTexture.image.onload = function () {
         handleLoadedTexture(moonTexture)
     }
-    moonTexture.image.src = "moon.gif";
+    moonTexture.image.src = "marsmap1k.jpg";
 
     crateTexture = gl.createTexture();
     crateTexture.image = new Image();
@@ -115,6 +120,13 @@ function initTextures() {
         handleLoadedTexture(crateTexture)
     }
     crateTexture.image.src = "earthmap1k.jpg";
+    
+    sunTexture = gl.createTexture();
+    sunTexture.image = new Image();
+    sunTexture.image.onload = function () {
+        handleLoadedTexture(sunTexture)
+    }
+    sunTexture.image.src = "sunmap.jpg";
 }
 
 
@@ -234,6 +246,7 @@ function initBuffers() {
 var moonAngle = 180;
 var cubeAngle = 0;
 var sceneAngle = 0;
+var newAngle = 0;
 
 function drawScene() {
     gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
@@ -241,48 +254,93 @@ function drawScene() {
 
     mat4.perspective(pMatrix, 45, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0);
 
-    var lighting = document.getElementById("lighting").checked;
+    //var lighting = document.getElementById("lighting").checked;
+    
+    var lighting  = true;
     gl.uniform1i(shaderProgram.useLightingUniform, lighting);
     
     if (lighting) {
+        
+        //CG - Increase the ambient light so we can see the sun. 
         gl.uniform3f(
             shaderProgram.ambientColorUniform,
-            parseFloat(document.getElementById("ambientR").value),
-            parseFloat(document.getElementById("ambientG").value),
-            parseFloat(document.getElementById("ambientB").value)
+            parseFloat(0.8),
+            parseFloat(0.8),
+            parseFloat(0.8)
         );
 
+        //CG - Move the position of the point light so that it is in the centre of the sun.
         gl.uniform3f(
             shaderProgram.pointLightingLocationUniform,
-            parseFloat(document.getElementById("lightPositionX").value),
-            parseFloat(document.getElementById("lightPositionY").value),
-            parseFloat(document.getElementById("lightPositionZ").value)
+            parseFloat(0),
+            parseFloat(0),
+            parseFloat(-30)
         );
 
+        //CG - Set the point lighting colour to full (so we can see it above the ambient lighting).
         gl.uniform3f(
             shaderProgram.pointLightingColorUniform,
-            parseFloat(document.getElementById("pointR").value),
-            parseFloat(document.getElementById("pointG").value),
-            parseFloat(document.getElementById("pointB").value)
+            parseFloat(1),
+            parseFloat(1),
+            parseFloat(1)
         );
     }
 
     mat4.identity(mvMatrix);
 
     // CG - Move the scene back by -20 on the Z axis for the point light. 
-    mat4.translate(mvMatrix, mvMatrix, [0, 0, -20]);
+    mat4.translate(mvMatrix, mvMatrix, [0, 0, -30]);
 
     // CG - Push a new matrix for the scene. 
     mvPushMatrix();
     
-    // CG - Rotate the scene.
+    // CG - Rotate the entire scene.
     mat4.rotate(mvMatrix, mvMatrix, degToRad(sceneAngle), [0, 1, 0]);
     
-    //CG - Now push a new matrix for the first planet. 
+    // Push a new matrix for the sun. 
+    mvPushMatrix();
+
+    //Scale the sun to make it larger.
+    mat4.scale(mvMatrix, mvMatrix, [3, 3, 3]);
+    
+    //Set and bind the texture.
+    //DRAW THE SUN.
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, sunTexture);
+    gl.uniform1i(shaderProgram.samplerUniform, 0);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, moonVertexPositionBuffer);
+    gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, moonVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, moonVertexTextureCoordBuffer);
+    gl.vertexAttribPointer(shaderProgram.textureCoordAttribute, moonVertexTextureCoordBuffer.itemSize, gl.FLOAT, false, 0, 0);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, moonVertexNormalBuffer);
+    gl.vertexAttribPointer(shaderProgram.vertexNormalAttribute, moonVertexNormalBuffer.itemSize, gl.FLOAT, false, 0, 0);
+
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, moonVertexIndexBuffer);
+    
+    //Set matrix uniforms. 
+    setMatrixUniforms();
+    gl.drawElements(gl.TRIANGLES, moonVertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
+    
+    //Pop the Sun matrix, return to scene matrix.
+    mvPopMatrix();
+    
+    //CG - Now push a new matrix for Mars' rotation speed. 
     mvPushMatrix();
     
-    //CG - Move 5 units to the right, and rotate on its axis. 
-    mat4.translate(mvMatrix, mvMatrix, [-5, 0, 0]);
+    //Rotate Mars around the sun at a quicker rate to the "scene" rotation speed.
+    mat4.rotate(mvMatrix, mvMatrix, degToRad(newAngle), [0, 1, 0]);
+    
+    //Now push another matrix for Mars itself (so it sits on this new, faster orbit. )
+    mvPushMatrix();
+    
+    
+    //Move Mars further away from the Sun.
+    mat4.translate(mvMatrix, mvMatrix, [-20, 0, 0]);
+    
+    //Now rotate Mars on it's own axis. 
     mat4.rotate(mvMatrix, mvMatrix, degToRad(moonAngle), [0, 1, 0]);
     
     //Set and bind the texture.
@@ -305,17 +363,18 @@ function drawScene() {
     setMatrixUniforms();
     gl.drawElements(gl.TRIANGLES, moonVertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
     
-    //Pop the first planet matrix. 
+    //Pop the Mars matrix. (Returns to Mars orbit matrix).
+    mvPopMatrix();
+    
+    //Pop the Mars orbit matrix. (Returns to top-level scene matrix)
     mvPopMatrix();
 
-    
-    //Push a new matrix for the second planet. 
+    //Push a new matrix for Earth. (Earth stays at the same orbit speed as the sun).
     mvPushMatrix();
     
-    //Move 5 units to the right, (not 10 as we are back in the centre now remember?) 
-    mat4.translate(mvMatrix, mvMatrix, [5, 0, 0]);
+    mat4.translate(mvMatrix, mvMatrix, [10, 0, 0]);
     
-    //Rotate it again on it's own axis. 
+    //Rotate the earth on it's own axis. 
     mat4.rotate(mvMatrix, mvMatrix, degToRad(cubeAngle), [0, 1, 0]);
     
     gl.bindBuffer(gl.ARRAY_BUFFER, moonVertexPositionBuffer);
@@ -335,10 +394,10 @@ function drawScene() {
     setMatrixUniforms();
     gl.drawElements(gl.TRIANGLES, moonVertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
     
-    //Pop the second planet matrix. 
+    //Pop the Earth matrix. (Returns to top-level scene matrix).
     mvPopMatrix();
     
-    //Finally pop the scene matrix.
+    //Finally pop the top-level scene matrix.
     mvPopMatrix()
 }
 
@@ -353,7 +412,8 @@ function animate() {
 
         moonAngle += (180 * elapsed) / 1000.0;
         cubeAngle += (270 * elapsed) / 1000.0;
-        sceneAngle += (90* elapsed) / 1000.0;
+        sceneAngle += (40 * elapsed) / 1000.0;
+        newAngle += (40 * elapsed) / 1000.0;
     }
     lastTime = timeNow;
 }
