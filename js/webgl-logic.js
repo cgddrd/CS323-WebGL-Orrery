@@ -1,3 +1,4 @@
+//Minor change on 'scenegraph' branch.
 var gl;
 
 function initGL(canvas) {
