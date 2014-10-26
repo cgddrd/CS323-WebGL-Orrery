@@ -1,5 +1,9 @@
-//Minor change on 'scenegraph' branch.
 var gl;
+var sun;
+
+function setupScene() {
+    sun = new Orbital(sunTexture, 0, 5, 3, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer);
+}
 
 function initGL(canvas) {
     
@@ -327,7 +331,7 @@ function drawScene() {
     mvPushMatrix();
 
     // Push a new matrix for the sun. 
-    mvPushMatrix();
+   /* mvPushMatrix();
 
     // CG - Rotate the entire sun.
     mat4.rotate(mvMatrix, mvMatrix, degToRad(sunOrbitAngle), [0, 1, 0]);
@@ -357,7 +361,9 @@ function drawScene() {
     gl.drawElements(gl.TRIANGLES, planetVertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
     
     //Pop the Sun matrix, return to scene matrix.
-    mvPopMatrix();
+    mvPopMatrix();*/
+
+    sun.drawOrbital();
     
     //CG - Now push a new matrix for Mars' orbit path.
     mvPushMatrix();
@@ -528,6 +534,7 @@ function webGLStart() {
     initShaders();
     initBuffers();
     initTextures();
+    setupScene();
 
     //gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.clearColor(0, 0, 0, 0)
