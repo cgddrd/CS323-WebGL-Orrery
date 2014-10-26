@@ -1,4 +1,4 @@
-function Orbital(texture, orbitVelocity, spinVelocity, scaleFactor, vertexPositionBuffer, vertexTextureCoordBuffer, vertexNormalBuffer, vertexIndexBuffer) {
+function Orbital(texture, orbitVelocity, spinVelocity, scaleFactor, vertexPositionBuffer, vertexTextureCoordBuffer, vertexNormalBuffer, vertexIndexBuffer, orbitRadius) {
 
     this.children = [];
     this.texture = texture;
@@ -12,20 +12,47 @@ function Orbital(texture, orbitVelocity, spinVelocity, scaleFactor, vertexPositi
     this.vertexNormalBuffer = vertexNormalBuffer;
     this.vertexIndexBuffer = vertexIndexBuffer;
     this.lastAnimTime = 0;
+    this.orbitRadius = orbitRadius;
+
 }
 
-Orbital.prototype.drawOrbital = function() {
+Orbital.prototype.drawOrbital = function () {
 
     this.increaseSpin();
 
+    //Push matrix for planet orbit.
     mvPushMatrix();
+
+    if (this.orbitVelocity > 0) {
+        mat4.rotate(mvMatrix, mvMatrix, degToRad(this.orbitAngle), [0, 1, 0]);
+    }
+
+    if (this.orbitRadius != 0) {
+       mat4.translate(mvMatrix, mvMatrix, [this.orbitRadius, 0, 0]);
+    }
+
+    //Push matrix for planet.
+    mvPushMatrix();
+
+    if (this.children.length > 0) {
+
+        //Recursive function to draw child orbitals.
+        for (var i = 0; i < this.children.length; i++) {
+            var currentOrbital = this.children[i];
+            currentOrbital.drawOrbital();
+        }
+
+    }
 
     mat4.rotate(mvMatrix, mvMatrix, degToRad(this.spinAngle), [0, 1, 0]);
 
-    mat4.scale(mvMatrix, mvMatrix, [this.scaleFactor, this.scaleFactor, this.scaleFactor]);
+    if (this.scaleFactor != 0) {
+        mat4.scale(mvMatrix, mvMatrix, [this.scaleFactor, this.scaleFactor, this.scaleFactor]);
+    }
 
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, this.texture);
+
     gl.uniform1i(shaderProgram.samplerUniform1, 0);
 
     gl.uniform1i(shaderProgram.useMultipleTexturesUniform, false);
@@ -47,6 +74,8 @@ Orbital.prototype.drawOrbital = function() {
 
     mvPopMatrix();
 
+    mvPopMatrix();
+
 }
 
 Orbital.prototype.increaseSpin = function() {
@@ -62,4 +91,10 @@ Orbital.prototype.increaseSpin = function() {
     }
 
     this.lastAnimTime = timeNow;
+}
+
+Orbital.prototype.addChildOrbital = function(childOrbital) {
+
+    this.children.push(childOrbital);
+
 }
