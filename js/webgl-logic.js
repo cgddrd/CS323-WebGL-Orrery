@@ -81,6 +81,10 @@ function initShaders() {
 
     shaderProgram.pMatrixUniform = gl.getUniformLocation(shaderProgram, "uPMatrix");
     shaderProgram.mvMatrixUniform = gl.getUniformLocation(shaderProgram, "uMVMatrix");
+
+    shaderProgram.tMatrixUniform = gl.getUniformLocation(shaderProgram, "uTMatrix");
+
+
     shaderProgram.nMatrixUniform = gl.getUniformLocation(shaderProgram, "uNMatrix");
     shaderProgram.samplerUniform1 = gl.getUniformLocation(shaderProgram, "uSampler1");
     shaderProgram.samplerUniform2 = gl.getUniformLocation(shaderProgram, "uSampler2");
@@ -146,11 +150,12 @@ function initTextures() {
     cloudsTexture.image.onload = function () {
         handleLoadedTexture(cloudsTexture)
     }
-    cloudsTexture.image.src = "cloudimage.jpg";
+    cloudsTexture.image.src = "cloudimage.png";
 }
 
 
 var mvMatrix = mat4.create();
+var tMatrix = mat4.create();
 var mvMatrixStack = [];
 var pMatrix = mat4.create();
 
@@ -168,6 +173,7 @@ function mvPopMatrix() {
 function setMatrixUniforms() {
     gl.uniformMatrix4fv(shaderProgram.pMatrixUniform, false, pMatrix);
     gl.uniformMatrix4fv(shaderProgram.mvMatrixUniform, false, mvMatrix);
+    gl.uniformMatrix4fv(shaderProgram.tMatrixUniform, false, tMatrix);
 
     var normalMatrix = mat3.create();
     
@@ -260,6 +266,7 @@ function initBuffers() {
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indexData), gl.STREAM_DRAW);
     planetVertexIndexBuffer.itemSize = 1;
     planetVertexIndexBuffer.numItems = indexData.length;
+
 }
 
 var planetSpinAngle = 0;
@@ -267,15 +274,19 @@ var earthOrbitAngle = 0;
 var marsOrbitAngle = 0;
 var moonOrbitAngle = 0;
 var sunOrbitAngle = 0;
+var textureAngle = 0;
 
 function drawScene() {
     gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     mat4.perspective(pMatrix, 45, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0);
-
-    //var lighting = document.getElementById("lighting").checked;
     
+    // 2 * Math.PI = 360 degrees in radians.
+    // We want to move the clouds of the earth along the X-axis (not the land and see however).
+    // No of radians to move / 360 degrees in radians.
+    mat4.translate(tMatrix, tMatrix, [degToRad(0.1) / (2 * Math.PI), 0, 0]);
+
     var lighting  = true;
     gl.uniform1i(shaderProgram.useLightingUniform, lighting);
     
@@ -308,7 +319,7 @@ function drawScene() {
 
     mat4.identity(mvMatrix);
 
-    // CG - Move the scene back by -20 on the Z axis for the point light. 
+    // CG - Move the scene back by -50 on the Z axis for the point light.
     mat4.translate(mvMatrix, mvMatrix, [0, 0, -50]);
 
     // CG - Push a new matrix for the scene. 
@@ -317,19 +328,17 @@ function drawScene() {
     // Push a new matrix for the sun. 
     mvPushMatrix();
 
-    // CG - Rotate the entire scene.
+    // CG - Rotate the entire sun.
     mat4.rotate(mvMatrix, mvMatrix, degToRad(sunOrbitAngle), [0, 1, 0]);
 
     //Scale the sun to make it larger.
     mat4.scale(mvMatrix, mvMatrix, [3, 3, 3]);
-    
-    //Set and bind the texture.
-    //DRAW THE SUN.
+
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, sunTexture);
     gl.uniform1i(shaderProgram.samplerUniform1, 0);
 
-    gl.uniform1f(shaderProgram.useMultipleTexturesUniform, 0.0);
+    gl.uniform1i(shaderProgram.useMultipleTexturesUniform, false);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, planetVertexPositionBuffer);
     gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, planetVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
@@ -349,7 +358,7 @@ function drawScene() {
     //Pop the Sun matrix, return to scene matrix.
     mvPopMatrix();
     
-    //CG - Now push a new matrix for Mars' rotation speed. 
+    //CG - Now push a new matrix for Mars' orbit path.
     mvPushMatrix();
     
     //Rotate Mars around the sun at a quicker rate to the "scene" rotation speed.
@@ -369,7 +378,7 @@ function drawScene() {
     gl.bindTexture(gl.TEXTURE_2D, marsTexture);
     gl.uniform1i(shaderProgram.samplerUniform1, 0);
 
-    gl.uniform1f(shaderProgram.useMultipleTexturesUniform, 0.0);
+    gl.uniform1i(shaderProgram.useMultipleTexturesUniform, false);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, planetVertexPositionBuffer);
     gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, planetVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
@@ -392,14 +401,16 @@ function drawScene() {
     //Pop the Mars orbit matrix. (Returns to top-level scene matrix)
     mvPopMatrix();
 
-    //Push a new matrix for Earth. (Earth stays at the same orbit speed as the sun).
+    //Push a new matrix for Earth orbit.
     mvPushMatrix();
     
-    //Rotate the earth on it's own axis.
+    //Rotate the Earth around the Sun.
     mat4.rotate(mvMatrix, mvMatrix, degToRad(earthOrbitAngle), [0, 1, 0]);
 
+    //Push a new matrix for Earth itself.
     mvPushMatrix();
 
+    // Move the Earth away from the Sun.
     mat4.translate(mvMatrix, mvMatrix, [-20, 0, 0]);
     
     //Rotate the earth on it's own axis. 
@@ -422,18 +433,24 @@ function drawScene() {
     gl.bindTexture(gl.TEXTURE_2D, cloudsTexture);
     gl.uniform1i(shaderProgram.samplerUniform2, 1)
 
-    gl.uniform1f(shaderProgram.useMultipleTexturesUniform, 1.0);
+    //Pass a UNIFORM boolean through to the fragment/vertex shaders in order to specify that we want multiple layers on the earth.
+    gl.uniform1i(shaderProgram.useMultipleTexturesUniform, true);
 
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, planetVertexIndexBuffer);
     setMatrixUniforms();
     gl.drawElements(gl.TRIANGLES, planetVertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
 
+
+    //Push a new matrix for the Moon orbit (this is still contained within the Earth matrix so we can move the Moon relative to the Earth.)
     mvPushMatrix();
 
+    //Rotate the Moon around the Earth,
     mat4.rotate(mvMatrix, mvMatrix, degToRad(moonOrbitAngle), [0, 1, 0]);
 
+    //Push a new matrix for the Moon itself.
     mvPushMatrix();
 
+    //Scale and move the Moon away from the earth.
     mat4.scale(mvMatrix, mvMatrix, [0.4, 0.4, 0.4]);
     mat4.translate(mvMatrix, mvMatrix, [-15, 0, 0]);
 
@@ -453,19 +470,22 @@ function drawScene() {
     gl.bindTexture(gl.TEXTURE_2D, moonTexture);
     gl.uniform1i(shaderProgram.samplerUniform1, 0);
 
-    gl.uniform1f(shaderProgram.useMultipleTexturesUniform, 0.0);
+    gl.uniform1i(shaderProgram.useMultipleTexturesUniform, false);
 
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, planetVertexIndexBuffer);
     setMatrixUniforms();
     gl.drawElements(gl.TRIANGLES, planetVertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
 
+    //Pop the Moon matrix (Returns to Moon orbit matrix)
     mvPopMatrix();
 
+    //Pop the Moon orbit matrix (Returns to Earth matrix)
     mvPopMatrix();
     
-    //Pop the Earth matrix. (Returns to top-level scene matrix).
+    //Pop the Earth matrix (Returns to Earth orbit matrix)
     mvPopMatrix();
     
+    //Pop the Earth orbit matrix. (Returns to top-level scene matrix).
     mvPopMatrix();
 
     //Finally pop the top-level scene matrix.
@@ -481,9 +501,9 @@ function animate() {
     if (lastTime != 0) {
         var elapsed = timeNow - lastTime;
 
-        planetSpinAngle += (60 * elapsed) / 1000.0;
+        planetSpinAngle += (1 * elapsed) / 1000.0;
         sunOrbitAngle += (5 * elapsed) / 1000.0;
-        earthOrbitAngle += (50 * elapsed) / 1000.0;
+        earthOrbitAngle += (30 * elapsed) / 1000.0;
         marsOrbitAngle += (20 * elapsed) / 1000.0;
         moonOrbitAngle += (40 * elapsed) / 1000.0;
 
