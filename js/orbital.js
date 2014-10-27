@@ -1,4 +1,4 @@
-function Orbital(textures, orbitVelocity, spinVelocity, scaleFactor, vertexPositionBuffer, vertexTextureCoordBuffer, vertexNormalBuffer, vertexIndexBuffer, orbitRadius) {
+function Orbital(name, textures, orbitVelocity, spinVelocity, scaleFactor, vertexPositionBuffer, vertexTextureCoordBuffer, vertexNormalBuffer, vertexIndexBuffer, orbitRadius) {
 
     this.children = [];
     this.textures = textures;
@@ -13,6 +13,7 @@ function Orbital(textures, orbitVelocity, spinVelocity, scaleFactor, vertexPosit
     this.vertexIndexBuffer = vertexIndexBuffer;
     this.lastAnimTime = 0;
     this.orbitRadius = orbitRadius;
+    this.name = name;
 
 }
 
@@ -56,6 +57,8 @@ Orbital.prototype.drawOrbital = function () {
     gl.bindTexture(gl.TEXTURE_2D, this.textures[0]);
     gl.uniform1i(shaderProgram.samplerUniform1, 0);
 
+
+
     if (this.textures.length > 1) {
 
         gl.activeTexture(gl.TEXTURE1);
@@ -66,6 +69,15 @@ Orbital.prototype.drawOrbital = function () {
 
     } else {
         gl.uniform1i(shaderProgram.useMultipleTexturesUniform, false);
+    }
+
+    if (this.name === "sun") {
+        gl.uniform3f(
+            shaderProgram.ambientColorUniform,
+            parseFloat(1),
+            parseFloat(1),
+            parseFloat(1)
+        );
     }
 
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexPositionBuffer);

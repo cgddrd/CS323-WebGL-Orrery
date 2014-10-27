@@ -95,25 +95,25 @@ function handleMouseWheel(event) {
 
 function setupScene() {
 
-    sun = new Orbital([sunTexture], 0, 5, 3, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, 0);
+    sun = new Orbital("sun", [sunTexture], 0, 5, 3, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, 0);
 
-    mercury = new Orbital([mercuryTexture], 120, 40, 0.3, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -10);
+    mercury = new Orbital("mercury", [mercuryTexture], 120, 40, 0.3, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -10);
 
-    venus = new Orbital([venusTexture], 110, 35, 0.5, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -20);
+    venus = new Orbital("venus", [venusTexture], 110, 35, 0.5, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -20);
 
-    earth = new Orbital([earthTexture, cloudsTexture], 100, 30, 0, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -30);
+    earth = new Orbital("earth", [earthTexture, cloudsTexture], 100, 30, 0, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -30);
 
-    moon = new Orbital([moonTexture], 300, 30, 0.2, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -5);
+    moon = new Orbital("moon", [moonTexture], 300, 30, 0.2, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -5);
 
-    mars = new Orbital([marsTexture], 90, 30, 0, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -40);
+    mars = new Orbital("mars", [marsTexture], 90, 30, 0, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -40);
 
-    jupiter = new Orbital([jupiterTexture], 50, 10, 2.5, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -50);
+    jupiter = new Orbital("jupiter", [jupiterTexture], 50, 10, 2.5, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -50);
 
-    saturn = new Orbital([saturnTexture], 40, 10, 2, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -60);
+    saturn = new Orbital("saturn", [saturnTexture], 40, 10, 2, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -60);
 
-    uranus = new Orbital([uranusTexture], 20, 15, 1.5, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -70);
+    uranus = new Orbital("uranus", [uranusTexture], 20, 15, 1.5, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -70);
 
-    neptune = new Orbital([neptuneTexture], 10, 15, 1.3, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -80);
+    neptune = new Orbital("neptune", [neptuneTexture], 10, 15, 1.3, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -80);
 
 
     sun.addChildOrbital(mercury);
@@ -219,12 +219,14 @@ function initShaders() {
     shaderProgram.samplerUniform1 = gl.getUniformLocation(shaderProgram, "uSampler1");
     shaderProgram.samplerUniform2 = gl.getUniformLocation(shaderProgram, "uSampler2");
     shaderProgram.useLightingUniform = gl.getUniformLocation(shaderProgram, "uUseLighting");
+    shaderProgram.materialShininessUniform = gl.getUniformLocation(shaderProgram, "uMaterialShininess");
 
     shaderProgram.useMultipleTexturesUniform = gl.getUniformLocation(shaderProgram, "uUseMultiTextures");
 
     shaderProgram.ambientColorUniform = gl.getUniformLocation(shaderProgram, "uAmbientColor");
-    shaderProgram.pointLightingLocationUniform = gl.getUniformLocation(shaderProgram, "uPointLightingLocation");
-    shaderProgram.pointLightingColorUniform = gl.getUniformLocation(shaderProgram, "uPointLightingColor");
+        shaderProgram.pointLightingLocationUniform = gl.getUniformLocation(shaderProgram, "uPointLightingLocation");
+        shaderProgram.pointLightingSpecularColorUniform = gl.getUniformLocation(shaderProgram, "uPointLightingSpecularColor");
+        shaderProgram.pointLightingDiffuseColorUniform = gl.getUniformLocation(shaderProgram, "uPointLightingDiffuseColor");
 }
 
 function isPowerOf2(value) {
@@ -606,9 +608,9 @@ function drawScene() {
         //CG - Increase the ambient light so we can see the sun. 
         gl.uniform3f(
             shaderProgram.ambientColorUniform,
-            parseFloat(0.9),
-            parseFloat(0.9),
-            parseFloat(0.9)
+            parseFloat(0.2),
+            parseFloat(0.2),
+            parseFloat(0.2)
         );
 
         //CG - Move the position of the point light so that it is in the centre of the sun.
@@ -621,11 +623,21 @@ function drawScene() {
 
         //CG - Set the point lighting colour to full (so we can see it above the ambient lighting).
         gl.uniform3f(
-            shaderProgram.pointLightingColorUniform,
+            shaderProgram.pointLightingDiffuseColorUniform,
+            parseFloat(0.8),
+            parseFloat(0.8),
+            parseFloat(0.8)
+        );
+
+        //CG
+        gl.uniform3f(
+            shaderProgram.pointLightingSpecularColorUniform,
             parseFloat(1),
             parseFloat(1),
             parseFloat(1)
         );
+
+        gl.uniform1f(shaderProgram.materialShininessUniform, parseFloat(10));
     }
 
     mat4.identity(mvMatrix);
