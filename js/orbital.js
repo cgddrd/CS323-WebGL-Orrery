@@ -1,7 +1,7 @@
-function Orbital(texture, orbitVelocity, spinVelocity, scaleFactor, vertexPositionBuffer, vertexTextureCoordBuffer, vertexNormalBuffer, vertexIndexBuffer, orbitRadius) {
+function Orbital(textures, orbitVelocity, spinVelocity, scaleFactor, vertexPositionBuffer, vertexTextureCoordBuffer, vertexNormalBuffer, vertexIndexBuffer, orbitRadius) {
 
     this.children = [];
-    this.texture = texture;
+    this.textures = textures;
     this.scaleFactor = scaleFactor;
     this.orbitAngle = 0;
     this.spinAngle = 0;
@@ -18,7 +18,9 @@ function Orbital(texture, orbitVelocity, spinVelocity, scaleFactor, vertexPositi
 
 Orbital.prototype.drawOrbital = function () {
 
-    this.increaseSpin();
+    if (userSpin) {
+        this.increaseSpin();
+    }
 
     //Push matrix for planet orbit.
     mvPushMatrix();
@@ -51,11 +53,20 @@ Orbital.prototype.drawOrbital = function () {
     }
 
     gl.activeTexture(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_2D, this.texture);
-
+    gl.bindTexture(gl.TEXTURE_2D, this.textures[0]);
     gl.uniform1i(shaderProgram.samplerUniform1, 0);
 
-    gl.uniform1i(shaderProgram.useMultipleTexturesUniform, false);
+    if (this.textures.length > 1) {
+
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, cloudsTexture);
+        gl.uniform1i(shaderProgram.samplerUniform2, 1);
+
+        gl.uniform1i(shaderProgram.useMultipleTexturesUniform, true);
+
+    } else {
+        gl.uniform1i(shaderProgram.useMultipleTexturesUniform, false);
+    }
 
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexPositionBuffer);
     gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, this.vertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
