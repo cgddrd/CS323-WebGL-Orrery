@@ -1,4 +1,4 @@
-function Orbital(name, textures, orbitVelocity, spinVelocity, scaleFactor, vertexPositionBuffer, vertexTextureCoordBuffer, vertexNormalBuffer, vertexIndexBuffer, orbitRadius) {
+function Orbital(name, textures, orbitVelocity, spinVelocity, scaleFactor, vertexPositionBuffer, vertexTextureCoordBuffer, vertexNormalBuffer, vertexIndexBuffer, orbitRadius, eccentricity) {
 
     this.children = [];
     this.textures = textures;
@@ -14,24 +14,34 @@ function Orbital(name, textures, orbitVelocity, spinVelocity, scaleFactor, verte
     this.lastAnimTime = 0;
     this.orbitRadius = orbitRadius;
     this.name = name;
+    this.initialOrbitRadius = orbitRadius;
+    this.eccentricity = eccentricity;
 
 }
 
 Orbital.prototype.drawOrbital = function () {
 
+    //Push matrix for planet orbit.
+    mvPushMatrix();
+
     if (userSpin) {
         this.increaseSpin();
     }
-
-    //Push matrix for planet orbit.
-    mvPushMatrix();
 
     if (this.orbitVelocity > 0) {
         mat4.rotate(mvMatrix, mvMatrix, degToRad(this.orbitAngle), [0, 1, 0]);
     }
 
-    if (this.orbitRadius != 0) {
-       mat4.translate(mvMatrix, mvMatrix, [this.orbitRadius, 0, 0]);
+    if (this.initialOrbitRadius != 0) {
+
+        //CG - Calculate the change in the radius (used for the translation).
+        var r = (this.initialOrbitRadius * (1 + this.eccentricity)) / (1 + this.eccentricity * Math.cos(degToRad(this.orbitAngle)));
+
+        this.orbitRadius = r;
+
+        //CG - Translate using this radius.
+        mat4.translate(mvMatrix, mvMatrix, [this.orbitRadius, 0, 0]);
+
     }
 
     //Push matrix for planet.
@@ -57,8 +67,6 @@ Orbital.prototype.drawOrbital = function () {
     gl.bindTexture(gl.TEXTURE_2D, this.textures[0]);
     gl.uniform1i(shaderProgram.samplerUniform1, 0);
 
-
-
     if (this.textures.length > 1) {
 
         gl.activeTexture(gl.TEXTURE1);
@@ -74,9 +82,9 @@ Orbital.prototype.drawOrbital = function () {
     if (this.name === "sun") {
         gl.uniform3f(
             shaderProgram.ambientColorUniform,
-            parseFloat(1),
-            parseFloat(1),
-            parseFloat(1)
+            parseFloat(0.9),
+            parseFloat(0.9),
+            parseFloat(0.9)
         );
     }
 
@@ -109,7 +117,11 @@ Orbital.prototype.increaseSpin = function() {
 
         var elapsed = timeNow - this.lastAnimTime;
 
-        this.orbitAngle += (this.orbitVelocity * elapsed) / 1000.0;
+        //this.orbitAngle += (this.orbitVelocity * elapsed) / 1000.0;
+
+        //CG  - Calculate the change in orbit angle, and use this to rotate an elliptical orbit using the orbit velocity.
+        this.orbitAngle += ((elapsed * this.initialOrbitRadius * this.initialOrbitRadius * this.orbitVelocity) / (this.orbitRadius * this.orbitRadius)) / 1000.0;
+
         this.spinAngle += (this.spinVelocity * elapsed) / 1000.0;
     }
 
