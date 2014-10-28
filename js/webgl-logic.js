@@ -1,4 +1,134 @@
 var gl;
+var sun, earth, mars, moon, mercury, venus, jupiter, saturn, uranus, neptune;
+var zoom = 1.0;
+
+var mouseDown = false;
+var lastMouseX = null;
+var lastMouseY = null;
+
+var userSpin = true;
+
+var resetRotationMatrix = mat4.create();
+
+var moonRotationMatrix = mat4.create();
+
+var currentlyPressedKeys = {};
+
+function handleKeyDown(event) {
+    currentlyPressedKeys[event.keyCode] = true;
+
+    if (String.fromCharCode(event.keyCode) == "S" && userSpin == true) {
+      userSpin = false;
+    } else if (String.fromCharCode(event.keyCode) == "S" && userSpin == false) {
+      userSpin = true;
+    }
+}
+
+function handleKeyUp(event) {
+    currentlyPressedKeys[event.keyCode] = false;
+}
+
+function handleMouseDown(event) {
+    mouseDown = true;
+    lastMouseX = event.clientX;
+    lastMouseY = event.clientY;
+}
+
+
+function handleMouseUp(event) {
+    mouseDown = false;
+}
+
+
+function handleMouseMove(event) {
+
+    if (!mouseDown) {
+        return;
+    }
+
+    var newX = event.clientX;
+    var newY = event.clientY;
+
+    var deltaX = newX - lastMouseX
+    var newRotationMatrix = mat4.create();
+    mat4.identity(newRotationMatrix);
+    mat4.rotate(newRotationMatrix, newRotationMatrix, degToRad(deltaX / 10), [0, 1, 0]);
+
+    var deltaY = newY - lastMouseY;
+    mat4.rotate(newRotationMatrix, newRotationMatrix, degToRad(deltaY / 10), [1, 0, 0]);
+
+    mat4.multiply(moonRotationMatrix, newRotationMatrix, moonRotationMatrix);
+
+    lastMouseX = newX;
+    lastMouseY = newY;
+}
+
+function handleMouseWheel(event) {
+
+    var delta = 0;
+
+    if (!event) {
+        event = window.event;
+    }
+
+    if (event.wheelDelta) {
+        delta = event.wheelDelta / 120;
+    } else if (event.detail) {
+        delta = -event.detail / 3;
+    }
+
+    if (delta) {
+
+        if (delta > 0) {
+            zoom += 0.05;
+
+        } else {
+            zoom -= 0.05;
+
+            if (zoom < 0.01) {
+                zoom = 0.1;
+            }
+        }
+    }
+
+}
+
+function setupScene() {
+
+    sun = new Orbital("sun", [sunTexture], 0, 5, 3, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, 0, 0.5);
+
+    mercury = new Orbital("mercury", [mercuryTexture], 120, 40, 0.3, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -10, 0.5);
+
+    venus = new Orbital("venus", [venusTexture], 110, 35, 0.5, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -20, 0.5);
+
+    earth = new Orbital("earth", [earthTexture, cloudsTexture], 100, 30, 0, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -30, 0.5);
+
+    moon = new Orbital("moon", [moonTexture], 300, 30, 0.2, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -5, 0.5);
+
+    mars = new Orbital("mars", [marsTexture], 90, 30, 0, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -40, 0.5);
+
+    jupiter = new Orbital("jupiter", [jupiterTexture], 50, 10, 2.5, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -50, 0.5);
+
+    saturn = new Orbital("saturn", [saturnTexture], 40, 10, 2, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -60, 0.5);
+
+    uranus = new Orbital("uranus", [uranusTexture], 20, 15, 1.5, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -70, 0.5);
+
+    neptune = new Orbital("neptune", [neptuneTexture], 10, 15, 1.3, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -80, 0.5);
+
+
+    sun.addChildOrbital(mercury);
+    sun.addChildOrbital(venus);
+    sun.addChildOrbital(earth);
+    sun.addChildOrbital(mars);
+    sun.addChildOrbital(jupiter);
+    sun.addChildOrbital(saturn);
+    sun.addChildOrbital(uranus);
+    sun.addChildOrbital(neptune);
+
+    earth.addChildOrbital(moon);
+
+
+}
 
 function initGL(canvas) {
     
@@ -89,34 +219,65 @@ function initShaders() {
     shaderProgram.samplerUniform1 = gl.getUniformLocation(shaderProgram, "uSampler1");
     shaderProgram.samplerUniform2 = gl.getUniformLocation(shaderProgram, "uSampler2");
     shaderProgram.useLightingUniform = gl.getUniformLocation(shaderProgram, "uUseLighting");
+    shaderProgram.materialShininessUniform = gl.getUniformLocation(shaderProgram, "uMaterialShininess");
 
     shaderProgram.useMultipleTexturesUniform = gl.getUniformLocation(shaderProgram, "uUseMultiTextures");
 
     shaderProgram.ambientColorUniform = gl.getUniformLocation(shaderProgram, "uAmbientColor");
-    shaderProgram.pointLightingLocationUniform = gl.getUniformLocation(shaderProgram, "uPointLightingLocation");
-    shaderProgram.pointLightingColorUniform = gl.getUniformLocation(shaderProgram, "uPointLightingColor");
+        shaderProgram.pointLightingLocationUniform = gl.getUniformLocation(shaderProgram, "uPointLightingLocation");
+        shaderProgram.pointLightingSpecularColorUniform = gl.getUniformLocation(shaderProgram, "uPointLightingSpecularColor");
+        shaderProgram.pointLightingDiffuseColorUniform = gl.getUniformLocation(shaderProgram, "uPointLightingDiffuseColor");
 }
 
+function isPowerOf2(value) {
+  return (value & (value - 1)) == 0;
+}
 
 function handleLoadedTexture(texture) {
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
     gl.bindTexture(gl.TEXTURE_2D, texture);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, texture.image);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
-    gl.generateMipmap(gl.TEXTURE_2D);
+
+
+     // Check if the image is a power of 2 in both dimensions.
+  if (isPowerOf2(texture.image.width) && isPowerOf2(texture.image.height)) {
+     // Yes, it's a power of 2. Generate mips.
+     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+     gl.generateMipmap(gl.TEXTURE_2D);
+  } else {
+     // No, it's not a power of 2. Turn of mips and set wrapping to clamp to edge
+     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  }
+    //gl.generateMipmap(gl.TEXTURE_2D);
 
     gl.bindTexture(gl.TEXTURE_2D, null);
 }
 
-
+var spaceTexture;
 var marsTexture;
 var earthTexture;
 var sunTexture;
 var moonTexture;
 var cloudsTexture;
+var mercuryTexture;
+var venusTexture;
+var jupiterTexture;
+var saturnTexture;
+var uranusTexture;
+var neptuneTexture;
 
 function initTextures() {
+
+    spaceTexture = gl.createTexture();
+    spaceTexture.image = new Image();
+    spaceTexture.image.onload = function () {
+        handleLoadedTexture(spaceTexture)
+    }
+    spaceTexture.image.src = "space.jpg";
+
     marsTexture = gl.createTexture();
     marsTexture.image = new Image();
     marsTexture.image.onload = function () {
@@ -151,6 +312,48 @@ function initTextures() {
         handleLoadedTexture(cloudsTexture)
     }
     cloudsTexture.image.src = "cloudimage.png";
+
+    mercuryTexture = gl.createTexture();
+    mercuryTexture.image = new Image();
+    mercuryTexture.image.onload = function () {
+        handleLoadedTexture(mercuryTexture)
+    }
+    mercuryTexture.image.src = "mercurymap.jpg";
+
+    venusTexture = gl.createTexture();
+    venusTexture.image = new Image();
+    venusTexture.image.onload = function () {
+        handleLoadedTexture(venusTexture)
+    }
+    venusTexture.image.src = "venusmap.jpg";
+
+    jupiterTexture = gl.createTexture();
+    jupiterTexture.image = new Image();
+    jupiterTexture.image.onload = function () {
+        handleLoadedTexture(jupiterTexture)
+    }
+    jupiterTexture.image.src = "jupitermap.jpg";
+
+    saturnTexture = gl.createTexture();
+    saturnTexture.image = new Image();
+    saturnTexture.image.onload = function () {
+        handleLoadedTexture(saturnTexture)
+    }
+    saturnTexture.image.src = "saturnmap.jpg";
+
+    uranusTexture = gl.createTexture();
+    uranusTexture.image = new Image();
+    uranusTexture.image.onload = function () {
+        handleLoadedTexture(uranusTexture)
+    }
+    uranusTexture.image.src = "uranusmap.jpg";
+
+    neptuneTexture = gl.createTexture();
+    neptuneTexture.image = new Image();
+    neptuneTexture.image.onload = function () {
+        handleLoadedTexture(neptuneTexture)
+    }
+    neptuneTexture.image.src = "neptunemap.jpg";
 }
 
 
@@ -191,6 +394,10 @@ var planetVertexPositionBuffer;
 var planetVertexNormalBuffer;
 var planetVertexTextureCoordBuffer;
 var planetVertexIndexBuffer;
+var cubeVertexIndexBuffer;
+var cubeVertexPositionBuffer;
+var cubeVertexTextureCoordBuffer;
+
 
 function initBuffers() {
 
@@ -267,6 +474,112 @@ function initBuffers() {
     planetVertexIndexBuffer.itemSize = 1;
     planetVertexIndexBuffer.numItems = indexData.length;
 
+    cubeVertexPositionBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexPositionBuffer);
+    vertices = [
+      // Front face
+      -1.0, -1.0,  1.0,
+       1.0, -1.0,  1.0,
+       1.0,  1.0,  1.0,
+      -1.0,  1.0,  1.0,
+
+      // Back face
+      -1.0, -1.0, -1.0,
+      -1.0,  1.0, -1.0,
+       1.0,  1.0, -1.0,
+       1.0, -1.0, -1.0,
+
+      // Top face
+      -1.0,  1.0, -1.0,
+      -1.0,  1.0,  1.0,
+       1.0,  1.0,  1.0,
+       1.0,  1.0, -1.0,
+
+      // Bottom face
+      -1.0, -1.0, -1.0,
+       1.0, -1.0, -1.0,
+       1.0, -1.0,  1.0,
+      -1.0, -1.0,  1.0,
+
+      // Right face
+       1.0, -1.0, -1.0,
+       1.0,  1.0, -1.0,
+       1.0,  1.0,  1.0,
+       1.0, -1.0,  1.0,
+
+      // Left face
+      -1.0, -1.0, -1.0,
+      -1.0, -1.0,  1.0,
+      -1.0,  1.0,  1.0,
+      -1.0,  1.0, -1.0
+    ];
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+    cubeVertexPositionBuffer.itemSize = 3;
+    cubeVertexPositionBuffer.numItems = 24;
+
+    // -- SET cube TEXTURES --
+
+    cubeVertexTextureCoordBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexTextureCoordBuffer);
+    var textureCoords = [
+      // Front face
+      0.0, 0.0,
+      1.0, 0.0,
+      1.0, 1.0,
+      0.0, 1.0,
+
+      // Back face
+      1.0, 0.0,
+      1.0, 1.0,
+      0.0, 1.0,
+      0.0, 0.0,
+
+      // Top face
+      0.0, 1.0,
+      0.0, 0.0,
+      1.0, 0.0,
+      1.0, 1.0,
+
+      // Bottom face
+      1.0, 1.0,
+      0.0, 1.0,
+      0.0, 0.0,
+      1.0, 0.0,
+
+      // Right face
+      1.0, 0.0,
+      1.0, 1.0,
+      0.0, 1.0,
+      0.0, 0.0,
+
+      // Left face
+      0.0, 0.0,
+      1.0, 0.0,
+      1.0, 1.0,
+      0.0, 1.0
+    ];
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(textureCoords), gl.STATIC_DRAW);
+    cubeVertexTextureCoordBuffer.itemSize = 2;
+    cubeVertexTextureCoordBuffer.numItems = 24;
+
+    // -- SET CUBE VERTICES INDEX BUFFER --
+
+    cubeVertexIndexBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, cubeVertexIndexBuffer);
+
+    var cubeVertexIndices = [
+      0, 1, 2,      0, 2, 3,    // Front face
+      4, 5, 6,      4, 6, 7,    // Back face
+      8, 9, 10,     8, 10, 11,  // Top face
+      12, 13, 14,   12, 14, 15, // Bottom face
+      16, 17, 18,   16, 18, 19, // Right face
+      20, 21, 22,   20, 22, 23  // Left face
+    ]
+
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(cubeVertexIndices), gl.STATIC_DRAW);
+    cubeVertexIndexBuffer.itemSize = 1;
+    cubeVertexIndexBuffer.numItems = 36;
+
 }
 
 var planetSpinAngle = 0;
@@ -280,7 +593,7 @@ function drawScene() {
     gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    mat4.perspective(pMatrix, 45, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0);
+    mat4.perspective(pMatrix, 45, gl.viewportWidth / gl.viewportHeight, 0.1, 2000.0);
     
     // 2 * Math.PI = 360 degrees in radians.
     // We want to move the clouds of the earth along the X-axis (not the land and see however).
@@ -295,9 +608,9 @@ function drawScene() {
         //CG - Increase the ambient light so we can see the sun. 
         gl.uniform3f(
             shaderProgram.ambientColorUniform,
-            parseFloat(0.9),
-            parseFloat(0.9),
-            parseFloat(0.9)
+            parseFloat(0.2),
+            parseFloat(0.2),
+            parseFloat(0.2)
         );
 
         //CG - Move the position of the point light so that it is in the centre of the sun.
@@ -310,186 +623,66 @@ function drawScene() {
 
         //CG - Set the point lighting colour to full (so we can see it above the ambient lighting).
         gl.uniform3f(
-            shaderProgram.pointLightingColorUniform,
-            parseFloat(1),
-            parseFloat(1),
-            parseFloat(1)
+            shaderProgram.pointLightingDiffuseColorUniform,
+            parseFloat(0.8),
+            parseFloat(0.8),
+            parseFloat(0.8)
         );
+
+        //CG
+        gl.uniform3f(
+            shaderProgram.pointLightingSpecularColorUniform,
+            parseFloat(0.9),
+            parseFloat(0.9),
+            parseFloat(0.9)
+        );
+
+        gl.uniform1f(shaderProgram.materialShininessUniform, parseFloat(50));
     }
 
     mat4.identity(mvMatrix);
 
     // CG - Move the scene back by -50 on the Z axis for the point light.
     mat4.translate(mvMatrix, mvMatrix, [0, 0, -50]);
+    
+    // CG - Handle scene rotations (via mouse events)
+    mat4.multiply(mvMatrix, mvMatrix, moonRotationMatrix);
+    
+    // CG - Handle scene zooming (via mouse wheel events)
+    mat4.scale(mvMatrix, mvMatrix, [zoom, zoom, zoom]);
 
-    // CG - Push a new matrix for the scene. 
     mvPushMatrix();
 
-    // Push a new matrix for the sun. 
-    mvPushMatrix();
-
-    // CG - Rotate the entire sun.
-    mat4.rotate(mvMatrix, mvMatrix, degToRad(sunOrbitAngle), [0, 1, 0]);
-
-    //Scale the sun to make it larger.
-    mat4.scale(mvMatrix, mvMatrix, [3, 3, 3]);
+    mat4.scale(mvMatrix, mvMatrix, [500, 500, 500]);
 
     gl.activeTexture(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_2D, sunTexture);
+    gl.bindTexture(gl.TEXTURE_2D, spaceTexture);
     gl.uniform1i(shaderProgram.samplerUniform1, 0);
-
     gl.uniform1i(shaderProgram.useMultipleTexturesUniform, false);
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, planetVertexPositionBuffer);
-    gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, planetVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexPositionBuffer);
+    gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, cubeVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, planetVertexTextureCoordBuffer);
-    gl.vertexAttribPointer(shaderProgram.textureCoordAttribute, planetVertexTextureCoordBuffer.itemSize, gl.FLOAT, false, 0, 0);
+    // NEW: Set-up the cube texture buffer.
+    gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexTextureCoordBuffer);
+    gl.vertexAttribPointer(shaderProgram.textureCoordAttribute, cubeVertexTextureCoordBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, planetVertexNormalBuffer);
-    gl.vertexAttribPointer(shaderProgram.vertexNormalAttribute, planetVertexNormalBuffer.itemSize, gl.FLOAT, false, 0, 0);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, cubeVertexIndexBuffer);
 
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, planetVertexIndexBuffer);
-    
-    //Set matrix uniforms. 
     setMatrixUniforms();
-    gl.drawElements(gl.TRIANGLES, planetVertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
-    
-    //Pop the Sun matrix, return to scene matrix.
+
+    gl.drawElements(gl.TRIANGLES, cubeVertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
+
     mvPopMatrix();
-    
-    //CG - Now push a new matrix for Mars' orbit path.
-    mvPushMatrix();
-    
-    //Rotate Mars around the sun at a quicker rate to the "scene" rotation speed.
-    mat4.rotate(mvMatrix, mvMatrix, degToRad(marsOrbitAngle), [0, 1, 0]);
-    
-    //Now push another matrix for Mars itself (so it sits on this new, faster orbit. )
+
+    // CG - Push a new matrix for the scene.
     mvPushMatrix();
 
-    //Move Mars further away from the Sun.
-    mat4.translate(mvMatrix, mvMatrix, [-30, 0, 0]);
-    
-    //Now rotate Mars on it's own axis. 
-    mat4.rotate(mvMatrix, mvMatrix, degToRad(planetSpinAngle), [0, 1, 0]);
-    
-    //Set and bind the texture.
-    gl.activeTexture(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_2D, marsTexture);
-    gl.uniform1i(shaderProgram.samplerUniform1, 0);
-
-    gl.uniform1i(shaderProgram.useMultipleTexturesUniform, false);
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, planetVertexPositionBuffer);
-    gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, planetVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, planetVertexTextureCoordBuffer);
-    gl.vertexAttribPointer(shaderProgram.textureCoordAttribute, planetVertexTextureCoordBuffer.itemSize, gl.FLOAT, false, 0, 0);
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, planetVertexNormalBuffer);
-    gl.vertexAttribPointer(shaderProgram.vertexNormalAttribute, planetVertexNormalBuffer.itemSize, gl.FLOAT, false, 0, 0);
-
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, planetVertexIndexBuffer);
-    
-    //Set matrix uniforms. 
-    setMatrixUniforms();
-    gl.drawElements(gl.TRIANGLES, planetVertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
-    
-    //Pop the Mars matrix. (Returns to Mars orbit matrix).
-    mvPopMatrix();
-    
-    //Pop the Mars orbit matrix. (Returns to top-level scene matrix)
-    mvPopMatrix();
-
-    //Push a new matrix for Earth orbit.
-    mvPushMatrix();
-    
-    //Rotate the Earth around the Sun.
-    mat4.rotate(mvMatrix, mvMatrix, degToRad(earthOrbitAngle), [0, 1, 0]);
-
-    //Push a new matrix for Earth itself.
-    mvPushMatrix();
-
-    // Move the Earth away from the Sun.
-    mat4.translate(mvMatrix, mvMatrix, [-20, 0, 0]);
-    
-    //Rotate the earth on it's own axis. 
-    mat4.rotate(mvMatrix, mvMatrix, degToRad(planetSpinAngle), [0, 1, 0]);
-    
-    gl.bindBuffer(gl.ARRAY_BUFFER, planetVertexPositionBuffer);
-    gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, planetVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, planetVertexNormalBuffer);
-    gl.vertexAttribPointer(shaderProgram.vertexNormalAttribute, planetVertexNormalBuffer.itemSize, gl.FLOAT, false, 0, 0);
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, planetVertexTextureCoordBuffer);
-    gl.vertexAttribPointer(shaderProgram.textureCoordAttribute, planetVertexTextureCoordBuffer.itemSize, gl.FLOAT, false, 0, 0);
-
-    gl.activeTexture(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_2D, earthTexture);
-    gl.uniform1i(shaderProgram.samplerUniform1, 0);
-
-    gl.activeTexture(gl.TEXTURE1);
-    gl.bindTexture(gl.TEXTURE_2D, cloudsTexture);
-    gl.uniform1i(shaderProgram.samplerUniform2, 1)
-
-    //Pass a UNIFORM boolean through to the fragment/vertex shaders in order to specify that we want multiple layers on the earth.
-    gl.uniform1i(shaderProgram.useMultipleTexturesUniform, true);
-
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, planetVertexIndexBuffer);
-    setMatrixUniforms();
-    gl.drawElements(gl.TRIANGLES, planetVertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
-
-
-    //Push a new matrix for the Moon orbit (this is still contained within the Earth matrix so we can move the Moon relative to the Earth.)
-    mvPushMatrix();
-
-    //Rotate the Moon around the Earth,
-    mat4.rotate(mvMatrix, mvMatrix, degToRad(moonOrbitAngle), [0, 1, 0]);
-
-    //Push a new matrix for the Moon itself.
-    mvPushMatrix();
-
-    //Scale and move the Moon away from the earth.
-    mat4.scale(mvMatrix, mvMatrix, [0.4, 0.4, 0.4]);
-    mat4.translate(mvMatrix, mvMatrix, [-15, 0, 0]);
-
-    //Rotate the moon on it's own axis.
-    mat4.rotate(mvMatrix, mvMatrix, degToRad(planetSpinAngle), [0, 1, 0]);
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, planetVertexPositionBuffer);
-    gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, planetVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, planetVertexNormalBuffer);
-    gl.vertexAttribPointer(shaderProgram.vertexNormalAttribute, planetVertexNormalBuffer.itemSize, gl.FLOAT, false, 0, 0);
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, planetVertexTextureCoordBuffer);
-    gl.vertexAttribPointer(shaderProgram.textureCoordAttribute, planetVertexTextureCoordBuffer.itemSize, gl.FLOAT, false, 0, 0);
-
-    gl.activeTexture(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_2D, moonTexture);
-    gl.uniform1i(shaderProgram.samplerUniform1, 0);
-
-    gl.uniform1i(shaderProgram.useMultipleTexturesUniform, false);
-
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, planetVertexIndexBuffer);
-    setMatrixUniforms();
-    gl.drawElements(gl.TRIANGLES, planetVertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
-
-    //Pop the Moon matrix (Returns to Moon orbit matrix)
-    mvPopMatrix();
-
-    //Pop the Moon orbit matrix (Returns to Earth matrix)
-    mvPopMatrix();
-    
-    //Pop the Earth matrix (Returns to Earth orbit matrix)
-    mvPopMatrix();
-    
-    //Pop the Earth orbit matrix. (Returns to top-level scene matrix).
-    mvPopMatrix();
+    // CG - Kick off the rendering (start from the Sun and work our way down the tree).
+    sun.drawOrbital();
 
     //Finally pop the top-level scene matrix.
-    mvPopMatrix()
+    mvPopMatrix();
 }
 
 
@@ -523,13 +716,21 @@ function tick() {
 function webGLStart() {
     var canvas = document.getElementById("lesson12-canvas");
 
+    canvas.onmousedown = handleMouseDown;
+    document.onmouseup = handleMouseUp;
+    document.onmousemove = handleMouseMove;
+    window.onmousewheel = document.onmousewheel = handleMouseWheel;
+    document.onkeydown = handleKeyDown;
+    document.onkeyup = handleKeyUp;
+
     initGL(canvas);
     initShaders();
     initBuffers();
     initTextures();
+    setupScene();
 
-    //gl.clearColor(0.0, 0.0, 0.0, 1.0);
-    gl.clearColor(0, 0, 0, 0)
+    gl.clearColor(0.0, 0.0, 0.0, 1.0);
+    //gl.clearColor(0, 0, 0, 0)
     gl.enable(gl.DEPTH_TEST);
 
     tick();
