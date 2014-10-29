@@ -57,7 +57,9 @@ Orbital.prototype.drawOrbital = function () {
 
     }
 
+
     mat4.rotate(mvMatrix, mvMatrix, degToRad(this.spinAngle), [0, 1, 0]);
+
 
     if (this.scaleFactor != 0) {
         mat4.scale(mvMatrix, mvMatrix, [this.scaleFactor, this.scaleFactor, this.scaleFactor]);
@@ -104,6 +106,13 @@ Orbital.prototype.drawOrbital = function () {
     gl.drawElements(gl.TRIANGLES, this.vertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
 
     mvPopMatrix();
+
+    if (this.name === "saturn") {
+
+        //CG - Push the current matrix for saturn to another stack ready to render the rings of saturn last.
+        lastMatrixStack.push(mvMatrix);
+
+    }
 
     mvPopMatrix();
 

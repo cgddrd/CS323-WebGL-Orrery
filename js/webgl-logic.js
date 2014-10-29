@@ -1,6 +1,9 @@
 var gl;
 var sun, earth, mars, moon, mercury, venus, jupiter, saturn, uranus, neptune;
 var zoom = 1.0;
+var z = -50;
+var x = 0;
+var y = 0;
 
 var mouseDown = false;
 var lastMouseX = null;
@@ -224,9 +227,9 @@ function initShaders() {
     shaderProgram.useMultipleTexturesUniform = gl.getUniformLocation(shaderProgram, "uUseMultiTextures");
 
     shaderProgram.ambientColorUniform = gl.getUniformLocation(shaderProgram, "uAmbientColor");
-        shaderProgram.pointLightingLocationUniform = gl.getUniformLocation(shaderProgram, "uPointLightingLocation");
-        shaderProgram.pointLightingSpecularColorUniform = gl.getUniformLocation(shaderProgram, "uPointLightingSpecularColor");
-        shaderProgram.pointLightingDiffuseColorUniform = gl.getUniformLocation(shaderProgram, "uPointLightingDiffuseColor");
+    shaderProgram.pointLightingLocationUniform = gl.getUniformLocation(shaderProgram, "uPointLightingLocation");
+    shaderProgram.pointLightingSpecularColorUniform = gl.getUniformLocation(shaderProgram, "uPointLightingSpecularColor");
+    shaderProgram.pointLightingDiffuseColorUniform = gl.getUniformLocation(shaderProgram, "uPointLightingDiffuseColor");
 }
 
 function isPowerOf2(value) {
@@ -238,7 +241,6 @@ function handleLoadedTexture(texture) {
     gl.bindTexture(gl.TEXTURE_2D, texture);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, texture.image);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-
 
      // Check if the image is a power of 2 in both dimensions.
   if (isPowerOf2(texture.image.width) && isPowerOf2(texture.image.height)) {
@@ -268,6 +270,7 @@ var jupiterTexture;
 var saturnTexture;
 var uranusTexture;
 var neptuneTexture;
+var saturnRingTexture;
 
 function initTextures() {
 
@@ -354,12 +357,21 @@ function initTextures() {
         handleLoadedTexture(neptuneTexture)
     }
     neptuneTexture.image.src = "neptunemap.jpg";
+
+    saturnRingTexture = gl.createTexture();
+    saturnRingTexture.image = new Image();
+    saturnRingTexture.image.onload = function () {
+        handleLoadedTexture(saturnRingTexture)
+    }
+    saturnRingTexture.image.src = "ringsRGBA.png";
 }
 
 
 var mvMatrix = mat4.create();
 var tMatrix = mat4.create();
 var mvMatrixStack = [];
+
+var lastMatrixStack = [];
 var pMatrix = mat4.create();
 
 function mvPushMatrix() {
@@ -397,6 +409,9 @@ var planetVertexIndexBuffer;
 var cubeVertexIndexBuffer;
 var cubeVertexPositionBuffer;
 var cubeVertexTextureCoordBuffer;
+var squareVertexPositionBuffer;
+var squareVertexTextureCoordBuffer;
+
 
 
 function initBuffers() {
@@ -580,6 +595,31 @@ function initBuffers() {
     cubeVertexIndexBuffer.itemSize = 1;
     cubeVertexIndexBuffer.numItems = 36;
 
+    squareVertexPositionBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexPositionBuffer);
+    vertices = [
+         1.0,  1.0,  0.0,
+        -1.0,  1.0,  0.0,
+         1.0, -1.0,  0.0,
+        -1.0, -1.0,  0.0
+    ];
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+    squareVertexPositionBuffer.itemSize = 3;
+    squareVertexPositionBuffer.numItems = 4;
+
+    squareVertexTextureCoordBuffer=gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexTextureCoordBuffer);
+
+    texvert= [1.0, 0.0,
+              0.0, 0.0,
+              1.0, 1.0,
+              0.0, 1.0];
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(texvert), gl.STATIC_DRAW);
+
+    squareVertexTextureCoordBuffer.itemSize=2;
+    squareVertexTextureCoordBuffer.numItems=4;
+
+
 }
 
 var planetSpinAngle = 0;
@@ -603,51 +643,14 @@ function drawScene() {
     var lighting  = true;
     gl.uniform1i(shaderProgram.useLightingUniform, lighting);
     
-    if (lighting) {
-        
-        //CG - Increase the ambient light so we can see the sun. 
-        gl.uniform3f(
-            shaderProgram.ambientColorUniform,
-            parseFloat(0.2),
-            parseFloat(0.2),
-            parseFloat(0.2)
-        );
-
-        //CG - Move the position of the point light so that it is in the centre of the sun.
-        gl.uniform3f(
-            shaderProgram.pointLightingLocationUniform,
-            parseFloat(0),
-            parseFloat(0),
-            parseFloat(-50)
-        );
-
-        //CG - Set the point lighting colour to full (so we can see it above the ambient lighting).
-        gl.uniform3f(
-            shaderProgram.pointLightingDiffuseColorUniform,
-            parseFloat(0.8),
-            parseFloat(0.8),
-            parseFloat(0.8)
-        );
-
-        //CG
-        gl.uniform3f(
-            shaderProgram.pointLightingSpecularColorUniform,
-            parseFloat(0.9),
-            parseFloat(0.9),
-            parseFloat(0.9)
-        );
-
-        gl.uniform1f(shaderProgram.materialShininessUniform, parseFloat(50));
-    }
-
     mat4.identity(mvMatrix);
 
-    // CG - Move the scene back by -50 on the Z axis for the point light.
-    mat4.translate(mvMatrix, mvMatrix, [0, 0, -50]);
-    
+    // CG - Move based on the user's input.
+    mat4.translate(mvMatrix, mvMatrix, [x, y, z]);
+
     // CG - Handle scene rotations (via mouse events)
     mat4.multiply(mvMatrix, mvMatrix, moonRotationMatrix);
-    
+
     // CG - Handle scene zooming (via mouse wheel events)
     mat4.scale(mvMatrix, mvMatrix, [zoom, zoom, zoom]);
 
@@ -675,11 +678,74 @@ function drawScene() {
 
     mvPopMatrix();
 
+    //CG - Add lighting after we have rendered the skybox.
+    if (lighting) {
+        
+        //CG - Increase the ambient light so we can see the sun. 
+        gl.uniform3f(
+            shaderProgram.ambientColorUniform,
+            parseFloat(0.2),
+            parseFloat(0.2),
+            parseFloat(0.2)
+        );
+
+        //CG - Move the position of the point light so that it is in the centre of the sun.
+        gl.uniform3f(
+            shaderProgram.pointLightingLocationUniform,
+            parseFloat(x),
+            parseFloat(y),
+            parseFloat(z)
+        );
+
+        //CG - Set the point lighting colour to full (so we can see it above the ambient lighting).
+        gl.uniform3f(
+            shaderProgram.pointLightingDiffuseColorUniform,
+            parseFloat(0.8),
+            parseFloat(0.8),
+            parseFloat(0.8)
+        );
+
+        //CG
+        gl.uniform3f(
+            shaderProgram.pointLightingSpecularColorUniform,
+            parseFloat(0.9),
+            parseFloat(0.9),
+            parseFloat(0.9)
+        );
+
+        gl.uniform1f(shaderProgram.materialShininessUniform, parseFloat(50));
+    }
+
     // CG - Push a new matrix for the scene.
     mvPushMatrix();
 
     // CG - Kick off the rendering (start from the Sun and work our way down the tree).
     sun.drawOrbital();
+    
+    //Pop the matrix saved from earlier in order to render out the saturn ring last.
+    mvMatrix = lastMatrixStack.pop();
+    
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+    gl.enable(gl.BLEND);
+
+    mat4.rotate(mvMatrix, mvMatrix, degToRad(90), [1, 0, 0]);
+
+    mat4.scale(mvMatrix, mvMatrix, [15, 15, 15]);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexPositionBuffer);
+    gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, squareVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexTextureCoordBuffer);
+    gl.vertexAttribPointer(shaderProgram.textureCoordAttribute, squareVertexTextureCoordBuffer.itemSize, gl.FLOAT, false, 0, 0);
+
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, saturnRingTexture);
+    gl.uniform1i(shaderProgram.samplerUniform, 0);
+
+    setMatrixUniforms();
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, squareVertexPositionBuffer.numItems);
+
+    gl.disable(gl.BLEND);
 
     //Finally pop the top-level scene matrix.
     mvPopMatrix();
@@ -705,9 +771,38 @@ function animate() {
 }
 
 
+function handleKeys() {
+    if (currentlyPressedKeys[69]) {
+      // E
+      z -= 0.5;
+    }
+    if (currentlyPressedKeys[87]) {
+      // W
+      z += 0.5;
+    }
+    if (currentlyPressedKeys[37]) {
+      // Left cursor key
+      x += 0.5;
+    }
+    if (currentlyPressedKeys[39]) {
+      // Right cursor key
+      x -= 0.5;
+    }
+    if (currentlyPressedKeys[38]) {
+      // Up cursor key
+      y -= 0.5;
+    }
+    if (currentlyPressedKeys[40]) {
+      // Down cursor key
+      y += 0.5;
+    }
+  }
+
+
 
 function tick() {
     requestAnimFrame(tick);
+    handleKeys();
     drawScene();
     animate();
 }
@@ -730,7 +825,6 @@ function webGLStart() {
     setupScene();
 
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
-    //gl.clearColor(0, 0, 0, 0)
     gl.enable(gl.DEPTH_TEST);
 
     tick();

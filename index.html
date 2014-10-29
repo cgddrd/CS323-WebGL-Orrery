@@ -31,6 +31,8 @@
     uniform sampler2D uSampler1;
     uniform sampler2D uSampler2;
 
+    uniform float uAlpha;
+
     void main(void) {
         vec3 lightWeighting;
 
@@ -59,11 +61,11 @@
 
         if (uUseMultiTextures) {
 
-            gl_FragColor = vec4((fragmentColor1.rgb * (fragmentColor1.a - fragmentColor2.a) + fragmentColor2.rgb * fragmentColor2.a) * lightWeighting, fragmentColor1.a);
+            gl_FragColor = vec4((fragmentColor1.rgb * (fragmentColor1.a - fragmentColor2.a) + fragmentColor2.rgb * fragmentColor2.a) * lightWeighting, fragmentColor1.a * 1.0);
 
         } else {
 
-            gl_FragColor = vec4(fragmentColor1.rgb * lightWeighting, fragmentColor1.a);
+            gl_FragColor = vec4(fragmentColor1.rgb * lightWeighting, fragmentColor1.a * 1.0);
 
         }
     }
