@@ -30,6 +30,7 @@
 
     uniform sampler2D uSampler1;
     uniform sampler2D uSampler2;
+    uniform sampler2D uSampler3;
 
     uniform float uAlpha;
 
@@ -39,29 +40,45 @@
         vec3 lightDirection = normalize(uPointLightingLocation - vPosition.xyz);
         vec3 normal = normalize(vTransformedNormal);
 
+        vec4 dayColor = texture2D(uSampler1, vec2(vTextureCoord1.s, vTextureCoord1.t));
+        vec4 nightColor = texture2D(uSampler3, vec2(vTextureCoord1.s, vTextureCoord1.t));
+        vec4 cloudColor = texture2D(uSampler2, vec2(vTextureCoord2.s, vTextureCoord2.t));
+
         float specularLightWeighting = 0.0;
+
+        //Ramp this up to make the difference between day and night more noticable.
+        float diffusePower = 1.0;
 
         vec3 eyeDirection = normalize(-vPosition.xyz);
         vec3 reflectionDirection = reflect(-lightDirection, normal);
 
         specularLightWeighting = pow(max(dot(reflectionDirection, eyeDirection), 0.0), uMaterialShininess);
 
-        float diffuseLightWeighting = max(dot(normal, lightDirection), 0.0);
+        float diffuseLightWeighting = max(dot(normalize(normal), lightDirection), 0.0);
+
+        diffuseLightWeighting = clamp( diffuseLightWeighting * diffusePower, -1.0, 1.0);
+
+        //float mixAmount = diffuseLightWeighting * 0.2 + 0.2;
+
+        vec3 color = mix(nightColor.rgb, dayColor.rgb, diffuseLightWeighting);
 
         lightWeighting = uAmbientColor + uPointLightingSpecularColor * specularLightWeighting + uPointLightingDiffuseColor * diffuseLightWeighting;
 
         vec4 fragmentColor1;
         vec4 fragmentColor2;
+        vec4 fragmentColor3;
 
         fragmentColor1 = texture2D(uSampler1, vec2(vTextureCoord1.s, vTextureCoord1.t));
 
         fragmentColor2 = texture2D(uSampler2, vec2(vTextureCoord2.s, vTextureCoord2.t));
 
-        //gl_FragColor = vec4(fragmentColor.rgb * lightWeighting, fragmentColor.a);
+        fragmentColor3 = texture2D(uSampler3, vec2(vTextureCoord1.s, vTextureCoord1.t));
 
         if (uUseMultiTextures) {
 
-            gl_FragColor = vec4((fragmentColor1.rgb * (fragmentColor1.a - fragmentColor2.a) + fragmentColor2.rgb * fragmentColor2.a) * lightWeighting, fragmentColor1.a * 1.0);
+            //gl_FragColor = vec4((fragmentColor1.rgb * (fragmentColor1.a - fragmentColor2.a) + fragmentColor2.rgb * fragmentColor2.a) * lightWeighting, fragmentColor1.a * 1.0);
+
+            gl_FragColor = vec4((color + (fragmentColor2.rgb * fragmentColor2.a)) * lightWeighting, dayColor.a * 1.0);
 
         } else {
 

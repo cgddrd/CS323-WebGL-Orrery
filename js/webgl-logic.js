@@ -106,7 +106,7 @@ function setupScene() {
 
     earth = new Orbital("earth", [earthTexture, cloudsTexture], 100, 30, 0, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -30, 0.5);
 
-    moon = new Orbital("moon", [moonTexture], 300, 30, 0.2, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -5, 0.5);
+    moon = new Orbital("moon", [moonTexture], 1000, 30, 0.2, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -5, 0.5);
 
     mars = new Orbital("mars", [marsTexture], 90, 30, 0, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -40, 0.5);
 
@@ -221,6 +221,7 @@ function initShaders() {
     shaderProgram.nMatrixUniform = gl.getUniformLocation(shaderProgram, "uNMatrix");
     shaderProgram.samplerUniform1 = gl.getUniformLocation(shaderProgram, "uSampler1");
     shaderProgram.samplerUniform2 = gl.getUniformLocation(shaderProgram, "uSampler2");
+    shaderProgram.samplerUniform3 = gl.getUniformLocation(shaderProgram, "uSampler3");
     shaderProgram.useLightingUniform = gl.getUniformLocation(shaderProgram, "uUseLighting");
     shaderProgram.materialShininessUniform = gl.getUniformLocation(shaderProgram, "uMaterialShininess");
 
@@ -271,6 +272,7 @@ var saturnTexture;
 var uranusTexture;
 var neptuneTexture;
 var saturnRingTexture;
+var earthNightTexture;
 
 function initTextures() {
 
@@ -364,6 +366,13 @@ function initTextures() {
         handleLoadedTexture(saturnRingTexture)
     }
     saturnRingTexture.image.src = "ringsRGBA.png";
+
+    earthNightTexture = gl.createTexture();
+    earthNightTexture.image = new Image();
+    earthNightTexture.image.onload = function () {
+        handleLoadedTexture(earthNightTexture)
+    }
+    earthNightTexture.image.src = "earthlights1k.jpg";
 }
 
 
@@ -645,10 +654,16 @@ function drawScene() {
     
     mat4.identity(mvMatrix);
 
+
+
+    var lightPos = [0.0, 0.0, 0.0, 1.0];
+
     // CG - Move based on the user's input.
     mat4.translate(mvMatrix, mvMatrix, [x, y, z]);
 
-    // CG - Handle scene rotations (via mouse events)
+    vec4.transformMat4(lightPos, lightPos, mvMatrix);
+
+     // CG - Handle scene rotations (via mouse events)
     mat4.multiply(mvMatrix, mvMatrix, moonRotationMatrix);
 
     // CG - Handle scene zooming (via mouse wheel events)
@@ -680,8 +695,7 @@ function drawScene() {
 
     //CG - Add lighting after we have rendered the skybox.
     if (lighting) {
-        
-        //CG - Increase the ambient light so we can see the sun. 
+
         gl.uniform3f(
             shaderProgram.ambientColorUniform,
             parseFloat(0.2),
@@ -692,9 +706,9 @@ function drawScene() {
         //CG - Move the position of the point light so that it is in the centre of the sun.
         gl.uniform3f(
             shaderProgram.pointLightingLocationUniform,
-            parseFloat(x),
-            parseFloat(y),
-            parseFloat(z)
+            parseFloat(lightPos[0]),
+            parseFloat(lightPos[1]),
+            parseFloat(lightPos[2])
         );
 
         //CG - Set the point lighting colour to full (so we can see it above the ambient lighting).
@@ -708,12 +722,12 @@ function drawScene() {
         //CG
         gl.uniform3f(
             shaderProgram.pointLightingSpecularColorUniform,
-            parseFloat(0.9),
-            parseFloat(0.9),
-            parseFloat(0.9)
+            parseFloat(0.2),
+            parseFloat(0.2),
+            parseFloat(0.2)
         );
 
-        gl.uniform1f(shaderProgram.materialShininessUniform, parseFloat(50));
+        gl.uniform1f(shaderProgram.materialShininessUniform, parseFloat(10));
     }
 
     // CG - Push a new matrix for the scene.
@@ -749,6 +763,7 @@ function drawScene() {
 
     //Finally pop the top-level scene matrix.
     mvPopMatrix();
+
 }
 
 

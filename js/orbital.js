@@ -75,6 +75,12 @@ Orbital.prototype.drawOrbital = function () {
         gl.bindTexture(gl.TEXTURE_2D, cloudsTexture);
         gl.uniform1i(shaderProgram.samplerUniform2, 1);
 
+        //gl.uniform1i(shaderProgram.useMultipleTexturesUniform, true);
+
+        gl.activeTexture(gl.TEXTURE2);
+        gl.bindTexture(gl.TEXTURE_2D, earthNightTexture);
+        gl.uniform1i(shaderProgram.samplerUniform3, 2);
+
         gl.uniform1i(shaderProgram.useMultipleTexturesUniform, true);
 
     } else {
