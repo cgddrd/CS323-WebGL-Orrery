@@ -5,6 +5,12 @@ var z = -50;
 var x = 0;
 var y = 0;
 
+var textureNames = ["spaceTexture", "marsTexture", "earthTexture", "sunTexture", "moonTexture", "cloudsTexture", "mercuryTexture", "venusTexture", "jupiterTexture", "saturnTexture", "uranusTexture", "neptuneTexture", "saturnRingTexture", "earthNightTexture"];
+
+var textureImages = ["space.jpg", "marsmap1k.jpg", "earthmap1k.jpg", "sunmap.jpg", "moon.gif", "cloudimage.png", "mercurymap.jpg", "venusmap.jpg", "jupitermap.jpg", "saturnmap.jpg", "uranusmap.jpg", "neptunemap.jpg", "ringsRGBA.png", "earthlights1k.jpg"];
+
+var textures = {};
+
 var mouseDown = false;
 var lastMouseX = null;
 var lastMouseY = null;
@@ -14,6 +20,7 @@ var userSpin = true;
 var resetRotationMatrix = mat4.create();
 
 var moonRotationMatrix = mat4.create();
+
 
 var currentlyPressedKeys = {};
 
@@ -55,10 +62,10 @@ function handleMouseMove(event) {
     var deltaX = newX - lastMouseX
     var newRotationMatrix = mat4.create();
     mat4.identity(newRotationMatrix);
-    mat4.rotate(newRotationMatrix, newRotationMatrix, degToRad(deltaX / 10), [0, 1, 0]);
+    mat4.rotate(newRotationMatrix, newRotationMatrix, Utils.degToRad(deltaX / 10), [0, 1, 0]);
 
     var deltaY = newY - lastMouseY;
-    mat4.rotate(newRotationMatrix, newRotationMatrix, degToRad(deltaY / 10), [1, 0, 0]);
+    mat4.rotate(newRotationMatrix, newRotationMatrix, Utils.degToRad(deltaY / 10), [1, 0, 0]);
 
     mat4.multiply(moonRotationMatrix, newRotationMatrix, moonRotationMatrix);
 
@@ -98,26 +105,25 @@ function handleMouseWheel(event) {
 
 function setupScene() {
 
-    sun = new Orbital("sun", [sunTexture], 0, 5, 3, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, 0, 0.5);
+    sun = new Orbital("sun", [textures["sunTexture"]], 0, 5, 3, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, 0, 0.5);
 
-    mercury = new Orbital("mercury", [mercuryTexture], 120, 40, 0.3, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -10, 0.5);
+    mercury = new Orbital("mercury", [textures["mercuryTexture"]], 120, 40, 0.3, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -10, 0.5);
 
-    venus = new Orbital("venus", [venusTexture], 110, 35, 0.5, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -20, 0.5);
+    venus = new Orbital("venus", [textures["venusTexture"]], 110, 35, 0.5, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -20, 0.5);
 
-    earth = new Orbital("earth", [earthTexture, cloudsTexture], 100, 30, 0, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -30, 0.5);
+    earth = new Orbital("earth", [textures["earthTexture"], textures["cloudsTexture"], textures["earthNightTexture"]], 100, 30, 0, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -30, 0.5);
 
-    moon = new Orbital("moon", [moonTexture], 1000, 30, 0.2, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -5, 0.5);
+    moon = new Orbital("moon", [textures["moonTexture"]], 1000, 30, 0.2, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -5, 0.5);
 
-    mars = new Orbital("mars", [marsTexture], 90, 30, 0, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -40, 0.5);
+    mars = new Orbital("mars", [textures["marsTexture"]], 90, 30, 0, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -40, 0.5);
 
-    jupiter = new Orbital("jupiter", [jupiterTexture], 50, 10, 2.5, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -50, 0.5);
+    jupiter = new Orbital("jupiter", [textures["jupiterTexture"]], 50, 10, 2.5, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -50, 0.5);
 
-    saturn = new Orbital("saturn", [saturnTexture], 40, 10, 2, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -60, 0.5);
+    saturn = new Orbital("saturn", [textures["saturnTexture"]], 40, 10, 2, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -60, 0.5);
 
-    uranus = new Orbital("uranus", [uranusTexture], 20, 15, 1.5, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -70, 0.5);
+    uranus = new Orbital("uranus", [textures["uranusTexture"]], 20, 15, 1.5, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -70, 0.5);
 
-    neptune = new Orbital("neptune", [neptuneTexture], 10, 15, 1.3, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -80, 0.5);
-
+    neptune = new Orbital("neptune", [textures["neptuneTexture"]], 10, 15, 1.3, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -80, 0.5);
 
     sun.addChildOrbital(mercury);
     sun.addChildOrbital(venus);
@@ -233,18 +239,16 @@ function initShaders() {
     shaderProgram.pointLightingDiffuseColorUniform = gl.getUniformLocation(shaderProgram, "uPointLightingDiffuseColor");
 }
 
-function isPowerOf2(value) {
-  return (value & (value - 1)) == 0;
-}
-
 function handleLoadedTexture(texture) {
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
     gl.bindTexture(gl.TEXTURE_2D, texture);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, texture.image);
+
+    console.log(texture.image);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 
      // Check if the image is a power of 2 in both dimensions.
-  if (isPowerOf2(texture.image.width) && isPowerOf2(texture.image.height)) {
+  if (Utils.isPowerOfTwo(texture.image.width) && Utils.isPowerOfTwo(texture.image.height)) {
      // Yes, it's a power of 2. Generate mips.
      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
      gl.generateMipmap(gl.TEXTURE_2D);
@@ -254,125 +258,29 @@ function handleLoadedTexture(texture) {
      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
   }
-    //gl.generateMipmap(gl.TEXTURE_2D);
 
     gl.bindTexture(gl.TEXTURE_2D, null);
 }
 
-var spaceTexture;
-var marsTexture;
-var earthTexture;
-var sunTexture;
-var moonTexture;
-var cloudsTexture;
-var mercuryTexture;
-var venusTexture;
-var jupiterTexture;
-var saturnTexture;
-var uranusTexture;
-var neptuneTexture;
-var saturnRingTexture;
-var earthNightTexture;
-
-function initTextures() {
-
-    spaceTexture = gl.createTexture();
-    spaceTexture.image = new Image();
-    spaceTexture.image.onload = function () {
-        handleLoadedTexture(spaceTexture)
-    }
-    spaceTexture.image.src = "space.jpg";
-
-    marsTexture = gl.createTexture();
-    marsTexture.image = new Image();
-    marsTexture.image.onload = function () {
-        handleLoadedTexture(marsTexture)
-    }
-    marsTexture.image.src = "marsmap1k.jpg";
-
-    earthTexture = gl.createTexture();
-    earthTexture.image = new Image();
-    earthTexture.image.onload = function () {
-        handleLoadedTexture(earthTexture)
-    }
-    earthTexture.image.src = "earthmap1k.jpg";
+function initTextures(imageNames, imageURLs) {
     
-    sunTexture = gl.createTexture();
-    sunTexture.image = new Image();
-    sunTexture.image.onload = function () {
-        handleLoadedTexture(sunTexture)
-    }
-    sunTexture.image.src = "sunmap.jpg";
+    for(var i=0; i < imageURLs.length; i++){
 
-    moonTexture = gl.createTexture();
-    moonTexture.image = new Image();
-    moonTexture.image.onload = function () {
-        handleLoadedTexture(moonTexture)
-    }
-    moonTexture.image.src = "moon.gif";
+        textures[imageNames[i]] = gl.createTexture();
 
-    cloudsTexture = gl.createTexture();
-    cloudsTexture.image = new Image();
-    cloudsTexture.image.onload = function () {
-        handleLoadedTexture(cloudsTexture)
-    }
-    cloudsTexture.image.src = "cloudimage.png";
+        textures[imageNames[i]].image = new Image();
 
-    mercuryTexture = gl.createTexture();
-    mercuryTexture.image = new Image();
-    mercuryTexture.image.onload = function () {
-        handleLoadedTexture(mercuryTexture)
-    }
-    mercuryTexture.image.src = "mercurymap.jpg";
+        textures[imageNames[i]].image.onload = (function(value){
+           return function(){
+               handleLoadedTexture(textures[textureNames[value]]);
+           }
+        })(i);
 
-    venusTexture = gl.createTexture();
-    venusTexture.image = new Image();
-    venusTexture.image.onload = function () {
-        handleLoadedTexture(venusTexture)
-    }
-    venusTexture.image.src = "venusmap.jpg";
+        textures[imageNames[i]].image.src = imageURLs[i];
 
-    jupiterTexture = gl.createTexture();
-    jupiterTexture.image = new Image();
-    jupiterTexture.image.onload = function () {
-        handleLoadedTexture(jupiterTexture)
     }
-    jupiterTexture.image.src = "jupitermap.jpg";
 
-    saturnTexture = gl.createTexture();
-    saturnTexture.image = new Image();
-    saturnTexture.image.onload = function () {
-        handleLoadedTexture(saturnTexture)
-    }
-    saturnTexture.image.src = "saturnmap.jpg";
-
-    uranusTexture = gl.createTexture();
-    uranusTexture.image = new Image();
-    uranusTexture.image.onload = function () {
-        handleLoadedTexture(uranusTexture)
-    }
-    uranusTexture.image.src = "uranusmap.jpg";
-
-    neptuneTexture = gl.createTexture();
-    neptuneTexture.image = new Image();
-    neptuneTexture.image.onload = function () {
-        handleLoadedTexture(neptuneTexture)
-    }
-    neptuneTexture.image.src = "neptunemap.jpg";
-
-    saturnRingTexture = gl.createTexture();
-    saturnRingTexture.image = new Image();
-    saturnRingTexture.image.onload = function () {
-        handleLoadedTexture(saturnRingTexture)
-    }
-    saturnRingTexture.image.src = "ringsRGBA.png";
-
-    earthNightTexture = gl.createTexture();
-    earthNightTexture.image = new Image();
-    earthNightTexture.image.onload = function () {
-        handleLoadedTexture(earthNightTexture)
-    }
-    earthNightTexture.image.src = "earthlights1k.jpg";
+   // return textureArray;
 }
 
 
@@ -406,11 +314,6 @@ function setMatrixUniforms() {
     gl.uniformMatrix3fv(shaderProgram.nMatrixUniform, false, normalMatrix);
 }
 
-
-function degToRad(degrees) {
-    return degrees * Math.PI / 180;
-}
-
 var planetVertexPositionBuffer;
 var planetVertexNormalBuffer;
 var planetVertexTextureCoordBuffer;
@@ -420,8 +323,6 @@ var cubeVertexPositionBuffer;
 var cubeVertexTextureCoordBuffer;
 var squareVertexPositionBuffer;
 var squareVertexTextureCoordBuffer;
-
-
 
 function initBuffers() {
 
@@ -647,14 +548,12 @@ function drawScene() {
     // 2 * Math.PI = 360 degrees in radians.
     // We want to move the clouds of the earth along the X-axis (not the land and see however).
     // No of radians to move / 360 degrees in radians.
-    mat4.translate(tMatrix, tMatrix, [degToRad(0.1) / (2 * Math.PI), 0, 0]);
+    mat4.translate(tMatrix, tMatrix, [Utils.degToRad(0.1) / (2 * Math.PI), 0, 0]);
 
     var lighting  = true;
     gl.uniform1i(shaderProgram.useLightingUniform, lighting);
     
     mat4.identity(mvMatrix);
-
-
 
     var lightPos = [0.0, 0.0, 0.0, 1.0];
 
@@ -674,7 +573,9 @@ function drawScene() {
     mat4.scale(mvMatrix, mvMatrix, [500, 500, 500]);
 
     gl.activeTexture(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_2D, spaceTexture);
+
+    gl.bindTexture(gl.TEXTURE_2D, textures["spaceTexture"]);
+
     gl.uniform1i(shaderProgram.samplerUniform1, 0);
     gl.uniform1i(shaderProgram.useMultipleTexturesUniform, false);
 
@@ -742,7 +643,7 @@ function drawScene() {
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
     gl.enable(gl.BLEND);
 
-    mat4.rotate(mvMatrix, mvMatrix, degToRad(90), [1, 0, 0]);
+    mat4.rotate(mvMatrix, mvMatrix, Utils.degToRad(90), [1, 0, 0]);
 
     mat4.scale(mvMatrix, mvMatrix, [15, 15, 15]);
 
@@ -753,7 +654,9 @@ function drawScene() {
     gl.vertexAttribPointer(shaderProgram.textureCoordAttribute, squareVertexTextureCoordBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
     gl.activeTexture(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_2D, saturnRingTexture);
+    gl.bindTexture(gl.TEXTURE_2D, textures["saturnRingTexture"]);
+    //gl.bindTexture(gl.TEXTURE_2D, saturnRingTexture);
+
     gl.uniform1i(shaderProgram.samplerUniform, 0);
 
     setMatrixUniforms();
@@ -836,7 +739,8 @@ function webGLStart() {
     initGL(canvas);
     initShaders();
     initBuffers();
-    initTextures();
+    initTextures(textureNames, textureImages);
+
     setupScene();
 
     gl.clearColor(0.0, 0.0, 0.0, 1.0);

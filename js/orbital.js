@@ -17,6 +17,8 @@ function Orbital(name, textures, orbitVelocity, spinVelocity, scaleFactor, verte
     this.initialOrbitRadius = orbitRadius;
     this.eccentricity = eccentricity;
 
+    console.log(this.textures);
+
 }
 
 Orbital.prototype.drawOrbital = function () {
@@ -29,13 +31,13 @@ Orbital.prototype.drawOrbital = function () {
     }
 
     if (this.orbitVelocity > 0) {
-        mat4.rotate(mvMatrix, mvMatrix, degToRad(this.orbitAngle), [0, 1, 0]);
+        mat4.rotate(mvMatrix, mvMatrix, Utils.degToRad(this.orbitAngle), [0, 1, 0]);
     }
 
     if (this.initialOrbitRadius != 0) {
 
         //CG - Calculate the change in the radius (used for the translation).
-        var r = (this.initialOrbitRadius * (1 + this.eccentricity)) / (1 + this.eccentricity * Math.cos(degToRad(this.orbitAngle)));
+        var r = (this.initialOrbitRadius * (1 + this.eccentricity)) / (1 + this.eccentricity * Math.cos(Utils.degToRad(this.orbitAngle)));
 
         this.orbitRadius = r;
 
@@ -58,7 +60,7 @@ Orbital.prototype.drawOrbital = function () {
     }
 
 
-    mat4.rotate(mvMatrix, mvMatrix, degToRad(this.spinAngle), [0, 1, 0]);
+    mat4.rotate(mvMatrix, mvMatrix, Utils.degToRad(this.spinAngle), [0, 1, 0]);
 
 
     if (this.scaleFactor != 0) {
@@ -72,13 +74,11 @@ Orbital.prototype.drawOrbital = function () {
     if (this.textures.length > 1) {
 
         gl.activeTexture(gl.TEXTURE1);
-        gl.bindTexture(gl.TEXTURE_2D, cloudsTexture);
+        gl.bindTexture(gl.TEXTURE_2D, this.textures[1]);
         gl.uniform1i(shaderProgram.samplerUniform2, 1);
 
-        //gl.uniform1i(shaderProgram.useMultipleTexturesUniform, true);
-
         gl.activeTexture(gl.TEXTURE2);
-        gl.bindTexture(gl.TEXTURE_2D, earthNightTexture);
+        gl.bindTexture(gl.TEXTURE_2D, this.textures[2]);
         gl.uniform1i(shaderProgram.samplerUniform3, 2);
 
         gl.uniform1i(shaderProgram.useMultipleTexturesUniform, true);
