@@ -5,11 +5,9 @@ var z = -50;
 var x = 0;
 var y = 0;
 
-var textureNames = ["spaceTexture", "marsTexture", "earthTexture", "sunTexture", "moonTexture", "cloudsTexture", "mercuryTexture", "venusTexture", "jupiterTexture", "saturnTexture", "uranusTexture", "neptuneTexture", "saturnRingTexture", "earthNightTexture"];
+var textureCreator;
 
-var textureImages = ["space.jpg", "marsmap1k.jpg", "earthmap1k.jpg", "sunmap.jpg", "moon.gif", "cloudimage.png", "mercurymap.jpg", "venusmap.jpg", "jupitermap.jpg", "saturnmap.jpg", "uranusmap.jpg", "neptunemap.jpg", "ringsRGBA.png", "earthlights1k.jpg"];
-
-var textures = {};
+//var textures = {};
 
 var mouseDown = false;
 var lastMouseX = null;
@@ -105,25 +103,25 @@ function handleMouseWheel(event) {
 
 function setupScene() {
 
-    sun = new Orbital("sun", [textures["sunTexture"]], 0, 5, 3, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, 0, 0.5);
+    sun = new Orbital("sun", [textureCreator.getTextures()["sunTexture"]], 0, 5, 3, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, 0, 0.5);
 
-    mercury = new Orbital("mercury", [textures["mercuryTexture"]], 120, 40, 0.3, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -10, 0.5);
+    mercury = new Orbital("mercury", [textureCreator.getTextures()["mercuryTexture"]], 120, 40, 0.3, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -10, 0.5);
 
-    venus = new Orbital("venus", [textures["venusTexture"]], 110, 35, 0.5, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -20, 0.5);
+    venus = new Orbital("venus", [textureCreator.getTextures()["venusTexture"]], 110, 35, 0.5, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -20, 0.5);
 
-    earth = new Orbital("earth", [textures["earthTexture"], textures["cloudsTexture"], textures["earthNightTexture"]], 100, 30, 0, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -30, 0.5);
+    earth = new Orbital("earth", [textureCreator.getTextures()["earthTexture"], textureCreator.getTextures()["cloudsTexture"], textureCreator.getTextures()["earthNightTexture"]], 100, 30, 0, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -30, 0.5);
 
-    moon = new Orbital("moon", [textures["moonTexture"]], 1000, 30, 0.2, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -5, 0.5);
+    moon = new Orbital("moon", [textureCreator.getTextures()["moonTexture"]], 1000, 30, 0.2, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -5, 0.5);
 
-    mars = new Orbital("mars", [textures["marsTexture"]], 90, 30, 0, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -40, 0.5);
+    mars = new Orbital("mars", [textureCreator.getTextures()["marsTexture"]], 90, 30, 0, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -40, 0.5);
 
-    jupiter = new Orbital("jupiter", [textures["jupiterTexture"]], 50, 10, 2.5, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -50, 0.5);
+    jupiter = new Orbital("jupiter", [textureCreator.getTextures()["jupiterTexture"]], 50, 10, 2.5, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -50, 0.5);
 
-    saturn = new Orbital("saturn", [textures["saturnTexture"]], 40, 10, 2, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -60, 0.5);
+    saturn = new Orbital("saturn", [textureCreator.getTextures()["saturnTexture"]], 40, 10, 2, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -60, 0.5);
 
-    uranus = new Orbital("uranus", [textures["uranusTexture"]], 20, 15, 1.5, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -70, 0.5);
+    uranus = new Orbital("uranus", [textureCreator.getTextures()["uranusTexture"]], 20, 15, 1.5, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -70, 0.5);
 
-    neptune = new Orbital("neptune", [textures["neptuneTexture"]], 10, 15, 1.3, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -80, 0.5);
+    neptune = new Orbital("neptune", [textureCreator.getTextures()["neptuneTexture"]], 10, 15, 1.3, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -80, 0.5);
 
     sun.addChildOrbital(mercury);
     sun.addChildOrbital(venus);
@@ -574,7 +572,7 @@ function drawScene() {
 
     gl.activeTexture(gl.TEXTURE0);
 
-    gl.bindTexture(gl.TEXTURE_2D, textures["spaceTexture"]);
+    gl.bindTexture(gl.TEXTURE_2D, textureCreator.getTextures()["spaceTexture"]);
 
     gl.uniform1i(shaderProgram.samplerUniform1, 0);
     gl.uniform1i(shaderProgram.useMultipleTexturesUniform, false);
@@ -654,7 +652,7 @@ function drawScene() {
     gl.vertexAttribPointer(shaderProgram.textureCoordAttribute, squareVertexTextureCoordBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
     gl.activeTexture(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_2D, textures["saturnRingTexture"]);
+    gl.bindTexture(gl.TEXTURE_2D, textureCreator.getTextures()["saturnRingTexture"]);
     //gl.bindTexture(gl.TEXTURE_2D, saturnRingTexture);
 
     gl.uniform1i(shaderProgram.samplerUniform, 0);
@@ -739,7 +737,11 @@ function webGLStart() {
     initGL(canvas);
     initShaders();
     initBuffers();
-    initTextures(textureNames, textureImages);
+    //initTextures(textureNames, textureImages);
+
+    //textureCreator.initialiseTextures();
+
+    textureCreator = new TextureCreator(Config.textureNames, Config.textureImages);
 
     setupScene();
 

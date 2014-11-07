@@ -16,9 +16,6 @@ function Orbital(name, textures, orbitVelocity, spinVelocity, scaleFactor, verte
     this.name = name;
     this.initialOrbitRadius = orbitRadius;
     this.eccentricity = eccentricity;
-
-    console.log(this.textures);
-
 }
 
 Orbital.prototype.drawOrbital = function () {

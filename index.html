@@ -9,6 +9,9 @@
 
     <script type="text/javascript" src="js/utils.js"></script>
     <script type="text/javascript" src="js/orbital.js"></script>
+    <script type="text/javascript" src="js/texture.js"></script>
+    <script type="text/javascript" src="js/config.js"></script>
+
     
 <script id="shader-fs" type="x-shader/x-fragment">
 
@@ -113,6 +116,7 @@
         vTextureCoord2 = (uTMatrix * vec4(aTextureCoord1, 0.0, 1.0)).xy;
         vTransformedNormal = uNMatrix * aVertexNormal;
     }
+
 </script>
     
 <script src="js/webgl-logic.js"></script>
