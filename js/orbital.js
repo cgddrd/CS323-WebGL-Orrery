@@ -15,12 +15,12 @@ function Orbital(name, textures, orbitVelocity, spinVelocity, scaleFactor, buffe
     this.eccentricity = eccentricity;
 }
 
-Orbital.prototype.drawOrbital = function () {
+Orbital.prototype.drawOrbital = function (isSpinEnabled) {
 
     //Push matrix for planet orbit.
     mvPushMatrix();
 
-    if (userSpin) {
+    if (isSpinEnabled) {
         this.increaseSpin();
     }
 
@@ -48,14 +48,13 @@ Orbital.prototype.drawOrbital = function () {
         //Recursive function to draw child orbitals.
         for (var i = 0; i < this.children.length; i++) {
             var currentOrbital = this.children[i];
-            currentOrbital.drawOrbital();
+            currentOrbital.drawOrbital(isSpinEnabled);
         }
 
     }
 
 
     mat4.rotate(mvMatrix, mvMatrix, Utils.degToRad(this.spinAngle), [0, 1, 0]);
-
 
     if (this.scaleFactor != 0) {
         mat4.scale(mvMatrix, mvMatrix, [this.scaleFactor, this.scaleFactor, this.scaleFactor]);
@@ -65,29 +64,26 @@ Orbital.prototype.drawOrbital = function () {
     gl.bindTexture(gl.TEXTURE_2D, this.textures[this.name + "Texture"]);
     gl.uniform1i(shaderProgram.uSampler1, 0);
 
-    if (this.name === "earth") {
+    switch (this.name) {
 
-        gl.activeTexture(gl.TEXTURE1);
-        gl.bindTexture(gl.TEXTURE_2D, this.textures["cloudsTexture"]);
-        gl.uniform1i(shaderProgram.uSampler2, 1);
+        case "earth":
+            gl.activeTexture(gl.TEXTURE1);
+            gl.bindTexture(gl.TEXTURE_2D, this.textures["cloudsTexture"]);
+            gl.uniform1i(shaderProgram.uSampler2, 1);
 
-        gl.activeTexture(gl.TEXTURE2);
-        gl.bindTexture(gl.TEXTURE_2D, this.textures["earthNightTexture"]);
-        gl.uniform1i(shaderProgram.uSampler3, 2);
+            gl.activeTexture(gl.TEXTURE2);
+            gl.bindTexture(gl.TEXTURE_2D, this.textures["earthNightTexture"]);
+            gl.uniform1i(shaderProgram.uSampler3, 2);
 
-        gl.uniform1i(shaderProgram.uUseMultiTextures, true);
+            gl.uniform1i(shaderProgram.uUseMultiTextures, true);
 
-    } else {
-        gl.uniform1i(shaderProgram.uUseMultiTextures, false);
-    }
+            break;
+        case "sun":
+            gl.uniform3f(shaderProgram.uAmbientColor, parseFloat(0.9), parseFloat(0.9), parseFloat(0.9));
+        default:
+            gl.uniform1i(shaderProgram.uUseMultiTextures, false);
+            break;
 
-    if (this.name === "sun") {
-        gl.uniform3f(
-            shaderProgram.uAmbientColor,
-            parseFloat(0.9),
-            parseFloat(0.9),
-            parseFloat(0.9)
-        );
     }
 
     gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers["planetVertexPositionBuffer"]);
@@ -118,7 +114,7 @@ Orbital.prototype.drawOrbital = function () {
 
 }
 
-Orbital.prototype.increaseSpin = function() {
+Orbital.prototype.increaseSpin = function () {
 
     var timeNow = new Date().getTime();
 
@@ -137,7 +133,7 @@ Orbital.prototype.increaseSpin = function() {
     this.lastAnimTime = timeNow;
 }
 
-Orbital.prototype.addChildOrbital = function(childOrbital) {
+Orbital.prototype.addChildOrbital = function (childOrbital) {
 
     this.children.push(childOrbital);
 

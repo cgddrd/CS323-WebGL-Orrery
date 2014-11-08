@@ -1,116 +1,9 @@
 var gl;
 var sun, earth, mars, moon, mercury, venus, jupiter, saturn, uranus, neptune;
-var zoom = 1.0;
-var z = -50;
-var x = 0;
-var y = 0;
-
 var textureCreator;
-
-var mouseDown = false;
-var lastMouseX = null;
-var lastMouseY = null;
-
 var app;
-
 var shaderProgram;
-
-/*var planetVertexPositionBuffer;
-var planetVertexNormalBuffer;
-var planetVertexTextureCoordBuffer;
-var planetVertexIndexBuffer;
-var cubeVertexIndexBuffer;
-var cubeVertexPositionBuffer;
-var cubeVertexTextureCoordBuffer;
-var squareVertexPositionBuffer;
-var squareVertexTextureCoordBuffer; */
-
-var userSpin = true;
-
-var resetRotationMatrix = mat4.create();
-
-var moonRotationMatrix = mat4.create();
-
-var currentlyPressedKeys = {};
-
-function handleKeyDown(event) {
-    currentlyPressedKeys[event.keyCode] = true;
-
-    if (String.fromCharCode(event.keyCode) == "S" && userSpin == true) {
-        userSpin = false;
-    } else if (String.fromCharCode(event.keyCode) == "S" && userSpin == false) {
-        userSpin = true;
-    }
-}
-
-function handleKeyUp(event) {
-    currentlyPressedKeys[event.keyCode] = false;
-}
-
-function handleMouseDown(event) {
-    mouseDown = true;
-    lastMouseX = event.clientX;
-    lastMouseY = event.clientY;
-}
-
-
-function handleMouseUp(event) {
-    mouseDown = false;
-}
-
-
-function handleMouseMove(event) {
-
-    if (!mouseDown) {
-        return;
-    }
-
-    var newX = event.clientX;
-    var newY = event.clientY;
-
-    var deltaX = newX - lastMouseX
-    var newRotationMatrix = mat4.create();
-    mat4.identity(newRotationMatrix);
-    mat4.rotate(newRotationMatrix, newRotationMatrix, Utils.degToRad(deltaX / 10), [0, 1, 0]);
-
-    var deltaY = newY - lastMouseY;
-    mat4.rotate(newRotationMatrix, newRotationMatrix, Utils.degToRad(deltaY / 10), [1, 0, 0]);
-
-    mat4.multiply(moonRotationMatrix, newRotationMatrix, moonRotationMatrix);
-
-    lastMouseX = newX;
-    lastMouseY = newY;
-}
-
-function handleMouseWheel(event) {
-
-    var delta = 0;
-
-    if (!event) {
-        event = window.event;
-    }
-
-    if (event.wheelDelta) {
-        delta = event.wheelDelta / 120;
-    } else if (event.detail) {
-        delta = -event.detail / 3;
-    }
-
-    if (delta) {
-
-        if (delta > 0) {
-            zoom += 0.05;
-
-        } else {
-            zoom -= 0.05;
-
-            if (zoom < 0.01) {
-                zoom = 0.1;
-            }
-        }
-    }
-
-}
+var camera;
 
 function setupScene() {
 
@@ -212,18 +105,18 @@ function drawScene() {
     var lightPos = [0.0, 0.0, 0.0, 1.0];
 
     // CG - Handle scene rotations (via mouse events)
-    //mat4.multiply(mvMatrix, mvMatrix, moonRotationMatrix);
+    //mat4.multiply(mvMatrix, mvMatrix, camera.getRotationMatrix());
 
     // CG - Move based on the user's input.
-    mat4.translate(mvMatrix, mvMatrix, [x, y, z]);
+    mat4.translate(mvMatrix, mvMatrix, [camera.getXPosition(), camera.getYPosition(), camera.getZPosition()]);
 
     vec4.transformMat4(lightPos, lightPos, mvMatrix);
 
     // CG - Handle scene rotations (via mouse events)
-    mat4.multiply(mvMatrix, mvMatrix, moonRotationMatrix);
+    mat4.multiply(mvMatrix, mvMatrix, camera.getRotationMatrix());
 
     // CG - Handle scene zooming (via mouse wheel events)
-    mat4.scale(mvMatrix, mvMatrix, [zoom, zoom, zoom]);
+    mat4.scale(mvMatrix, mvMatrix, [camera.getZoomFactor(), camera.getZoomFactor(), camera.getZoomFactor()]);
 
     mvPushMatrix();
 
@@ -292,9 +185,10 @@ function drawScene() {
     mvPushMatrix();
 
     // CG - Kick off the rendering (start from the Sun and work our way down the tree).
-    sun.drawOrbital();
+    sun.drawOrbital(camera.isSpinEnabled());
 
     //Pop the matrix saved from earlier in order to render out the saturn ring last.
+
     mvMatrix = lastMatrixStack.pop();
 
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
@@ -325,38 +219,10 @@ function drawScene() {
 
 }
 
-function handleKeys() {
-    if (currentlyPressedKeys[69]) {
-        // E
-        z -= 0.5;
-    }
-    if (currentlyPressedKeys[87]) {
-        // W
-        z += 0.5;
-    }
-    if (currentlyPressedKeys[37]) {
-        // Left cursor key
-        x += 0.5;
-    }
-    if (currentlyPressedKeys[39]) {
-        // Right cursor key
-        x -= 0.5;
-    }
-    if (currentlyPressedKeys[38]) {
-        // Up cursor key
-        y -= 0.5;
-    }
-    if (currentlyPressedKeys[40]) {
-        // Down cursor key
-        y += 0.5;
-    }
-}
-
-
 
 function tick() {
     requestAnimFrame(tick);
-    handleKeys();
+    camera.handleKeys();
     drawScene();
 }
 
@@ -364,16 +230,11 @@ function tick() {
 function webGLStart() {
     var canvas = document.getElementById("lesson12-canvas");
 
-    canvas.onmousedown = handleMouseDown;
-    document.onmouseup = handleMouseUp;
-    document.onmousemove = handleMouseMove;
-    window.onmousewheel = document.onmousewheel = handleMouseWheel;
-    document.onkeydown = handleKeyDown;
-    document.onkeyup = handleKeyUp;
-
     initGL(canvas);
 
     app = new OrreryApp(gl);
+
+    camera = new Camera(canvas);
 
     shaderProgram = app.initShaders(Config.shaderAttributes, Config.shaderUniforms);
 
