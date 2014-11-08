@@ -1,4 +1,4 @@
-function Orbital(name, textures, orbitVelocity, spinVelocity, scaleFactor, vertexPositionBuffer, vertexTextureCoordBuffer, vertexNormalBuffer, vertexIndexBuffer, orbitRadius, eccentricity) {
+function Orbital(name, textures, orbitVelocity, spinVelocity, scaleFactor, buffers, orbitRadius, eccentricity) {
 
     this.children = [];
     this.textures = textures;
@@ -7,10 +7,7 @@ function Orbital(name, textures, orbitVelocity, spinVelocity, scaleFactor, verte
     this.spinAngle = 0;
     this.orbitVelocity = orbitVelocity;
     this.spinVelocity = spinVelocity;
-    this.vertexPositionBuffer = vertexPositionBuffer;
-    this.vertexTextureCoordBuffer = vertexTextureCoordBuffer;
-    this.vertexNormalBuffer = vertexNormalBuffer;
-    this.vertexIndexBuffer = vertexIndexBuffer;
+    this.buffers = buffers;
     this.lastAnimTime = 0;
     this.orbitRadius = orbitRadius;
     this.name = name;
@@ -65,17 +62,17 @@ Orbital.prototype.drawOrbital = function () {
     }
 
     gl.activeTexture(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_2D, this.textures[0]);
+    gl.bindTexture(gl.TEXTURE_2D, this.textures[this.name + "Texture"]);
     gl.uniform1i(shaderProgram.uSampler1, 0);
 
-    if (this.textures.length > 1) {
+    if (this.name === "earth") {
 
         gl.activeTexture(gl.TEXTURE1);
-        gl.bindTexture(gl.TEXTURE_2D, this.textures[1]);
+        gl.bindTexture(gl.TEXTURE_2D, this.textures["cloudsTexture"]);
         gl.uniform1i(shaderProgram.uSampler2, 1);
 
         gl.activeTexture(gl.TEXTURE2);
-        gl.bindTexture(gl.TEXTURE_2D, this.textures[2]);
+        gl.bindTexture(gl.TEXTURE_2D, this.textures["earthNightTexture"]);
         gl.uniform1i(shaderProgram.uSampler3, 2);
 
         gl.uniform1i(shaderProgram.uUseMultiTextures, true);
@@ -93,20 +90,20 @@ Orbital.prototype.drawOrbital = function () {
         );
     }
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexPositionBuffer);
-    gl.vertexAttribPointer(shaderProgram.aVertexPosition, this.vertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers["planetVertexPositionBuffer"]);
+    gl.vertexAttribPointer(shaderProgram.aVertexPosition, this.buffers["planetVertexPositionBuffer"].itemSize, gl.FLOAT, false, 0, 0);
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexTextureCoordBuffer);
-    gl.vertexAttribPointer(shaderProgram.aTextureCoord1, this.vertexTextureCoordBuffer.itemSize, gl.FLOAT, false, 0, 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers["planetVertexTextureCoordBuffer"]);
+    gl.vertexAttribPointer(shaderProgram.aTextureCoord1, this.buffers["planetVertexTextureCoordBuffer"].itemSize, gl.FLOAT, false, 0, 0);
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexNormalBuffer);
-    gl.vertexAttribPointer(shaderProgram.aVertexNormal, this.vertexNormalBuffer.itemSize, gl.FLOAT, false, 0, 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers["planetVertexNormalBuffer"]);
+    gl.vertexAttribPointer(shaderProgram.aVertexNormal, this.buffers["planetVertexNormalBuffer"].itemSize, gl.FLOAT, false, 0, 0);
 
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.vertexIndexBuffer);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.buffers["planetVertexIndexBuffer"]);
 
     setMatrixUniforms();
 
-    gl.drawElements(gl.TRIANGLES, this.vertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
+    gl.drawElements(gl.TRIANGLES, this.buffers["planetVertexIndexBuffer"].numItems, gl.UNSIGNED_SHORT, 0);
 
     mvPopMatrix();
 

@@ -114,25 +114,25 @@ function handleMouseWheel(event) {
 
 function setupScene() {
 
-    sun = new Orbital("sun", [textureCreator.getTextures()["sunTexture"]], 0, 5, 3, app.buffers["planetVertexPositionBuffer"], app.buffers["planetVertexTextureCoordBuffer"], app.buffers["planetVertexNormalBuffer"], app.buffers["planetVertexIndexBuffer"], 0, 0.5);
+    sun = new Orbital("sun", textureCreator.getTextures(), 0, 5, 3, app.getBuffers(), 0, 0.5);
 
-    mercury = new Orbital("mercury", [textureCreator.getTextures()["mercuryTexture"]], 120, 40, 0.3, app.buffers["planetVertexPositionBuffer"], app.buffers["planetVertexTextureCoordBuffer"], app.buffers["planetVertexNormalBuffer"], app.buffers["planetVertexIndexBuffer"], -10, 0.5);
+    mercury = new Orbital("mercury", textureCreator.getTextures(), 120, 40, 0.3, app.getBuffers(), -10, 0.5);
 
-    venus = new Orbital("venus", [textureCreator.getTextures()["venusTexture"]], 110, 35, 0.5, app.buffers["planetVertexPositionBuffer"], app.buffers["planetVertexTextureCoordBuffer"], app.buffers["planetVertexNormalBuffer"], app.buffers["planetVertexIndexBuffer"], -20, 0.5);
+    venus = new Orbital("venus", textureCreator.getTextures(), 110, 35, 0.5, app.getBuffers(), -20, 0.5);
 
-    earth = new Orbital("earth", [textureCreator.getTextures()["earthTexture"], textureCreator.getTextures()["cloudsTexture"], textureCreator.getTextures()["earthNightTexture"]], 100, 30, 0, app.buffers["planetVertexPositionBuffer"], app.buffers["planetVertexTextureCoordBuffer"], app.buffers["planetVertexNormalBuffer"], app.buffers["planetVertexIndexBuffer"], -30, 0.5);
+    earth = new Orbital("earth", textureCreator.getTextures(), 100, 30, 0, app.getBuffers(), -30, 0.5);
 
-    moon = new Orbital("moon", [textureCreator.getTextures()["moonTexture"]], 1000, 30, 0.2, app.buffers["planetVertexPositionBuffer"], app.buffers["planetVertexTextureCoordBuffer"], app.buffers["planetVertexNormalBuffer"], app.buffers["planetVertexIndexBuffer"], -5, 0.5);
+    moon = new Orbital("moon", textureCreator.getTextures(), 1000, 30, 0.2, app.getBuffers(), -5, 0.5);
 
-    mars = new Orbital("mars", [textureCreator.getTextures()["marsTexture"]], 90, 30, 0, app.buffers["planetVertexPositionBuffer"], app.buffers["planetVertexTextureCoordBuffer"], app.buffers["planetVertexNormalBuffer"], app.buffers["planetVertexIndexBuffer"], -40, 0.5);
+    mars = new Orbital("mars", textureCreator.getTextures(), 90, 30, 0, app.getBuffers(), -40, 0.5);
 
-    jupiter = new Orbital("jupiter", [textureCreator.getTextures()["jupiterTexture"]], 50, 10, 2.5, app.buffers["planetVertexPositionBuffer"], app.buffers["planetVertexTextureCoordBuffer"], app.buffers["planetVertexNormalBuffer"], app.buffers["planetVertexIndexBuffer"], -50, 0.5);
+    jupiter = new Orbital("jupiter", textureCreator.getTextures(), 50, 10, 2.5, app.getBuffers(), -50, 0.5);
 
-    saturn = new Orbital("saturn", [textureCreator.getTextures()["saturnTexture"]], 40, 10, 2, app.buffers["planetVertexPositionBuffer"], app.buffers["planetVertexTextureCoordBuffer"], app.buffers["planetVertexNormalBuffer"], app.buffers["planetVertexIndexBuffer"], -60, 0.5);
+    saturn = new Orbital("saturn", textureCreator.getTextures(), 40, 10, 2, app.getBuffers(), -60, 0.5);
 
-    uranus = new Orbital("uranus", [textureCreator.getTextures()["uranusTexture"]], 20, 15, 1.5, app.buffers["planetVertexPositionBuffer"], app.buffers["planetVertexTextureCoordBuffer"], app.buffers["planetVertexNormalBuffer"], app.buffers["planetVertexIndexBuffer"], -70, 0.5);
+    uranus = new Orbital("uranus", textureCreator.getTextures(), 20, 15, 1.5, app.getBuffers(), -70, 0.5);
 
-    neptune = new Orbital("neptune", [textureCreator.getTextures()["neptuneTexture"]], 10, 15, 1.3, app.buffers["planetVertexPositionBuffer"], app.buffers["planetVertexTextureCoordBuffer"], app.buffers["planetVertexNormalBuffer"], app.buffers["planetVertexIndexBuffer"], -80, 0.5);
+    neptune = new Orbital("neptune", textureCreator.getTextures(), 10, 15, 1.3, app.getBuffers(), -80, 0.5);
 
     sun.addChildOrbital(mercury);
     sun.addChildOrbital(venus);
@@ -144,8 +144,6 @@ function setupScene() {
     sun.addChildOrbital(neptune);
 
     earth.addChildOrbital(moon);
-
-
 }
 
 function initGL(canvas) {
@@ -193,13 +191,6 @@ function setMatrixUniforms() {
     gl.uniformMatrix3fv(shaderProgram.uNMatrix, false, normalMatrix);
 }
 
-var planetSpinAngle = 0;
-var earthOrbitAngle = 0;
-var marsOrbitAngle = 0;
-var moonOrbitAngle = 0;
-var sunOrbitAngle = 0;
-var textureAngle = 0;
-
 function drawScene() {
 
     gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
@@ -219,6 +210,9 @@ function drawScene() {
     mat4.identity(mvMatrix);
 
     var lightPos = [0.0, 0.0, 0.0, 1.0];
+
+    // CG - Handle scene rotations (via mouse events)
+    //mat4.multiply(mvMatrix, mvMatrix, moonRotationMatrix);
 
     // CG - Move based on the user's input.
     mat4.translate(mvMatrix, mvMatrix, [x, y, z]);
@@ -246,14 +240,14 @@ function drawScene() {
     gl.vertexAttribPointer(shaderProgram.aVertexPosition, app.buffers["cubeVertexPositionBuffer"].itemSize, gl.FLOAT, false, 0, 0);
 
     // NEW: Set-up the cube texture buffer.
-    gl.bindBuffer(gl.ARRAY_BUFFER, app.buffers["cubeVertexPositionBuffer"]);
-    gl.vertexAttribPointer(shaderProgram.aTextureCoord1, app.buffers["cubeVertexPositionBuffer"].itemSize, gl.FLOAT, false, 0, 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, app.buffers["cubeVertexTextureCoordBuffer"]);
+    gl.vertexAttribPointer(shaderProgram.aTextureCoord1, app.buffers["cubeVertexTextureCoordBuffer"].itemSize, gl.FLOAT, false, 0, 0);
 
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, app.buffers["cubeVertexPositionBuffer"]);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, app.buffers["cubeVertexIndexBuffer"]);
 
     setMatrixUniforms();
 
-    gl.drawElements(gl.TRIANGLES, app.buffers["cubeVertexPositionBuffer"].numItems, gl.UNSIGNED_SHORT, 0);
+    gl.drawElements(gl.TRIANGLES, app.buffers["cubeVertexIndexBuffer"].numItems, gl.UNSIGNED_SHORT, 0);
 
     mvPopMatrix();
 
@@ -331,26 +325,6 @@ function drawScene() {
 
 }
 
-
-
-var lastTime = 0;
-
-function animate() {
-    var timeNow = new Date().getTime();
-    if (lastTime != 0) {
-        var elapsed = timeNow - lastTime;
-
-        planetSpinAngle += (1 * elapsed) / 1000.0;
-        sunOrbitAngle += (5 * elapsed) / 1000.0;
-        earthOrbitAngle += (30 * elapsed) / 1000.0;
-        marsOrbitAngle += (20 * elapsed) / 1000.0;
-        moonOrbitAngle += (40 * elapsed) / 1000.0;
-
-    }
-    lastTime = timeNow;
-}
-
-
 function handleKeys() {
     if (currentlyPressedKeys[69]) {
         // E
@@ -384,7 +358,6 @@ function tick() {
     requestAnimFrame(tick);
     handleKeys();
     drawScene();
-    animate();
 }
 
 
@@ -403,8 +376,6 @@ function webGLStart() {
     app = new OrreryApp(gl);
 
     shaderProgram = app.initShaders(Config.shaderAttributes, Config.shaderUniforms);
-
-    //initBuffers();
 
     app.initialiseBuffers(Config.shaderBuffers);
 

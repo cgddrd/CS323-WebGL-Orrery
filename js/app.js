@@ -285,3 +285,7 @@ OrreryApp.prototype.initialiseBuffers = function (shaderBuffers) {
     this.buffers["squareVertexTextureCoordBuffer"].numItems = 4;
 
 }
+
+OrreryApp.prototype.getBuffers = function() {
+    return this.buffers;
+}
