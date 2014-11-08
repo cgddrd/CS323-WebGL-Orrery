@@ -11,6 +11,20 @@ var mouseDown = false;
 var lastMouseX = null;
 var lastMouseY = null;
 
+var app;
+
+var shaderProgram;
+
+/*var planetVertexPositionBuffer;
+var planetVertexNormalBuffer;
+var planetVertexTextureCoordBuffer;
+var planetVertexIndexBuffer;
+var cubeVertexIndexBuffer;
+var cubeVertexPositionBuffer;
+var cubeVertexTextureCoordBuffer;
+var squareVertexPositionBuffer;
+var squareVertexTextureCoordBuffer; */
+
 var userSpin = true;
 
 var resetRotationMatrix = mat4.create();
@@ -100,25 +114,25 @@ function handleMouseWheel(event) {
 
 function setupScene() {
 
-    sun = new Orbital("sun", [textureCreator.getTextures()["sunTexture"]], 0, 5, 3, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, 0, 0.5);
+    sun = new Orbital("sun", [textureCreator.getTextures()["sunTexture"]], 0, 5, 3, app.buffers["planetVertexPositionBuffer"], app.buffers["planetVertexTextureCoordBuffer"], app.buffers["planetVertexNormalBuffer"], app.buffers["planetVertexIndexBuffer"], 0, 0.5);
 
-    mercury = new Orbital("mercury", [textureCreator.getTextures()["mercuryTexture"]], 120, 40, 0.3, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -10, 0.5);
+    mercury = new Orbital("mercury", [textureCreator.getTextures()["mercuryTexture"]], 120, 40, 0.3, app.buffers["planetVertexPositionBuffer"], app.buffers["planetVertexTextureCoordBuffer"], app.buffers["planetVertexNormalBuffer"], app.buffers["planetVertexIndexBuffer"], -10, 0.5);
 
-    venus = new Orbital("venus", [textureCreator.getTextures()["venusTexture"]], 110, 35, 0.5, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -20, 0.5);
+    venus = new Orbital("venus", [textureCreator.getTextures()["venusTexture"]], 110, 35, 0.5, app.buffers["planetVertexPositionBuffer"], app.buffers["planetVertexTextureCoordBuffer"], app.buffers["planetVertexNormalBuffer"], app.buffers["planetVertexIndexBuffer"], -20, 0.5);
 
-    earth = new Orbital("earth", [textureCreator.getTextures()["earthTexture"], textureCreator.getTextures()["cloudsTexture"], textureCreator.getTextures()["earthNightTexture"]], 100, 30, 0, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -30, 0.5);
+    earth = new Orbital("earth", [textureCreator.getTextures()["earthTexture"], textureCreator.getTextures()["cloudsTexture"], textureCreator.getTextures()["earthNightTexture"]], 100, 30, 0, app.buffers["planetVertexPositionBuffer"], app.buffers["planetVertexTextureCoordBuffer"], app.buffers["planetVertexNormalBuffer"], app.buffers["planetVertexIndexBuffer"], -30, 0.5);
 
-    moon = new Orbital("moon", [textureCreator.getTextures()["moonTexture"]], 1000, 30, 0.2, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -5, 0.5);
+    moon = new Orbital("moon", [textureCreator.getTextures()["moonTexture"]], 1000, 30, 0.2, app.buffers["planetVertexPositionBuffer"], app.buffers["planetVertexTextureCoordBuffer"], app.buffers["planetVertexNormalBuffer"], app.buffers["planetVertexIndexBuffer"], -5, 0.5);
 
-    mars = new Orbital("mars", [textureCreator.getTextures()["marsTexture"]], 90, 30, 0, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -40, 0.5);
+    mars = new Orbital("mars", [textureCreator.getTextures()["marsTexture"]], 90, 30, 0, app.buffers["planetVertexPositionBuffer"], app.buffers["planetVertexTextureCoordBuffer"], app.buffers["planetVertexNormalBuffer"], app.buffers["planetVertexIndexBuffer"], -40, 0.5);
 
-    jupiter = new Orbital("jupiter", [textureCreator.getTextures()["jupiterTexture"]], 50, 10, 2.5, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -50, 0.5);
+    jupiter = new Orbital("jupiter", [textureCreator.getTextures()["jupiterTexture"]], 50, 10, 2.5, app.buffers["planetVertexPositionBuffer"], app.buffers["planetVertexTextureCoordBuffer"], app.buffers["planetVertexNormalBuffer"], app.buffers["planetVertexIndexBuffer"], -50, 0.5);
 
-    saturn = new Orbital("saturn", [textureCreator.getTextures()["saturnTexture"]], 40, 10, 2, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -60, 0.5);
+    saturn = new Orbital("saturn", [textureCreator.getTextures()["saturnTexture"]], 40, 10, 2, app.buffers["planetVertexPositionBuffer"], app.buffers["planetVertexTextureCoordBuffer"], app.buffers["planetVertexNormalBuffer"], app.buffers["planetVertexIndexBuffer"], -60, 0.5);
 
-    uranus = new Orbital("uranus", [textureCreator.getTextures()["uranusTexture"]], 20, 15, 1.5, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -70, 0.5);
+    uranus = new Orbital("uranus", [textureCreator.getTextures()["uranusTexture"]], 20, 15, 1.5, app.buffers["planetVertexPositionBuffer"], app.buffers["planetVertexTextureCoordBuffer"], app.buffers["planetVertexNormalBuffer"], app.buffers["planetVertexIndexBuffer"], -70, 0.5);
 
-    neptune = new Orbital("neptune", [textureCreator.getTextures()["neptuneTexture"]], 10, 15, 1.3, planetVertexPositionBuffer, planetVertexTextureCoordBuffer, planetVertexNormalBuffer, planetVertexIndexBuffer, -80, 0.5);
+    neptune = new Orbital("neptune", [textureCreator.getTextures()["neptuneTexture"]], 10, 15, 1.3, app.buffers["planetVertexPositionBuffer"], app.buffers["planetVertexTextureCoordBuffer"], app.buffers["planetVertexNormalBuffer"], app.buffers["planetVertexIndexBuffer"], -80, 0.5);
 
     sun.addChildOrbital(mercury);
     sun.addChildOrbital(venus);
@@ -148,129 +162,6 @@ function initGL(canvas) {
         alert("Could not initialise WebGL, sorry :-(");
     }
 }
-
-
-function getShader(gl, id) {
-    var shaderScript = document.getElementById(id);
-    if (!shaderScript) {
-        return null;
-    }
-
-    var str = "";
-    var k = shaderScript.firstChild;
-    while (k) {
-        if (k.nodeType == 3) {
-            str += k.textContent;
-        }
-        k = k.nextSibling;
-    }
-
-    var shader;
-    if (shaderScript.type == "x-shader/x-fragment") {
-        shader = gl.createShader(gl.FRAGMENT_SHADER);
-    } else if (shaderScript.type == "x-shader/x-vertex") {
-        shader = gl.createShader(gl.VERTEX_SHADER);
-    } else {
-        return null;
-    }
-
-    gl.shaderSource(shader, str);
-    gl.compileShader(shader);
-
-    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-        alert(gl.getShaderInfoLog(shader));
-        return null;
-    }
-
-    return shader;
-}
-
-var app;
-
-var shaderProgram;
-
-function initialiseShaderAttributes(shaderProgram, shaderAttributes) {
-
-    for (var i = 0, max = shaderAttributes.length; i < max; i += 1) {
-        shaderProgram[shaderAttributes[i]] = gl.getAttribLocation(shaderProgram, shaderAttributes[i]);
-        gl.enableVertexAttribArray(shaderProgram[shaderAttributes[i]]);
-    }
-
-}
-
-function initialiseShaderUniforms(shaderProgram, shaderUniforms) {
-
-    for (var i = 0, max = shaderUniforms.length; i < max; i += 1) {
-        shaderProgram[shaderUniforms[i]] = gl.getUniformLocation(shaderProgram, shaderUniforms[i]);
-    }
-
-}
-
-function initShaders() {
-//    var fragmentShader = getShader(gl, "shader-fs");
-//    var vertexShader = getShader(gl, "shader-vs");
-//
-//    shaderProgram = gl.createProgram();
-//    gl.attachShader(shaderProgram, vertexShader);
-//    gl.attachShader(shaderProgram, fragmentShader);
-//    gl.linkProgram(shaderProgram);
-//
-//    if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
-//        alert("Could not initialise shaders");
-//    }
-//
-//    gl.useProgram(shaderProgram);
-//
-//    initialiseShaderAttributes(shaderProgram, Config.shaderAttributes);
-//
-//    initialiseShaderUniforms(shaderProgram, Config.shaderUniforms);
-
-}
-
-function handleLoadedTexture(texture) {
-    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-    gl.bindTexture(gl.TEXTURE_2D, texture);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, texture.image);
-
-    console.log(texture.image);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-
-    // Check if the image is a power of 2 in both dimensions.
-    if (Utils.isPowerOfTwo(texture.image.width) && Utils.isPowerOfTwo(texture.image.height)) {
-        // Yes, it's a power of 2. Generate mips.
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
-        gl.generateMipmap(gl.TEXTURE_2D);
-    } else {
-        // No, it's not a power of 2. Turn of mips and set wrapping to clamp to edge
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-    }
-
-    gl.bindTexture(gl.TEXTURE_2D, null);
-}
-
-function initTextures(imageNames, imageURLs) {
-
-    for (var i = 0; i < imageURLs.length; i++) {
-
-        textures[imageNames[i]] = gl.createTexture();
-
-        textures[imageNames[i]].image = new Image();
-
-        textures[imageNames[i]].image.onload = (function (value) {
-            return function () {
-                handleLoadedTexture(textures[textureNames[value]]);
-            }
-        })(i);
-
-        textures[imageNames[i]].image.src = imageURLs[i];
-
-    }
-
-    // return textureArray;
-}
-
 
 var mvMatrix = mat4.create();
 var tMatrix = mat4.create();
@@ -302,224 +193,6 @@ function setMatrixUniforms() {
     gl.uniformMatrix3fv(shaderProgram.uNMatrix, false, normalMatrix);
 }
 
-var planetVertexPositionBuffer;
-var planetVertexNormalBuffer;
-var planetVertexTextureCoordBuffer;
-var planetVertexIndexBuffer;
-var cubeVertexIndexBuffer;
-var cubeVertexPositionBuffer;
-var cubeVertexTextureCoordBuffer;
-var squareVertexPositionBuffer;
-var squareVertexTextureCoordBuffer;
-
-function initBuffers() {
-
-    var latitudeBands = 30;
-    var longitudeBands = 30;
-    var radius = 2;
-
-    var vertexPositionData = [];
-    var normalData = [];
-    var textureCoordData = [];
-    for (var latNumber = 0; latNumber <= latitudeBands; latNumber++) {
-        var theta = latNumber * Math.PI / latitudeBands;
-        var sinTheta = Math.sin(theta);
-        var cosTheta = Math.cos(theta);
-
-        for (var longNumber = 0; longNumber <= longitudeBands; longNumber++) {
-            var phi = longNumber * 2 * Math.PI / longitudeBands;
-            var sinPhi = Math.sin(phi);
-            var cosPhi = Math.cos(phi);
-
-            var x = cosPhi * sinTheta;
-            var y = cosTheta;
-            var z = sinPhi * sinTheta;
-            var u = 1 - (longNumber / longitudeBands);
-            var v = 1 - (latNumber / latitudeBands);
-
-            normalData.push(x);
-            normalData.push(y);
-            normalData.push(z);
-            textureCoordData.push(u);
-            textureCoordData.push(v);
-            vertexPositionData.push(radius * x);
-            vertexPositionData.push(radius * y);
-            vertexPositionData.push(radius * z);
-        }
-    }
-
-    var indexData = [];
-    for (var latNumber = 0; latNumber < latitudeBands; latNumber++) {
-        for (var longNumber = 0; longNumber < longitudeBands; longNumber++) {
-            var first = (latNumber * (longitudeBands + 1)) + longNumber;
-            var second = first + longitudeBands + 1;
-            indexData.push(first);
-            indexData.push(second);
-            indexData.push(first + 1);
-
-            indexData.push(second);
-            indexData.push(second + 1);
-            indexData.push(first + 1);
-        }
-    }
-
-    planetVertexNormalBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, planetVertexNormalBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(normalData), gl.STATIC_DRAW);
-    planetVertexNormalBuffer.itemSize = 3;
-    planetVertexNormalBuffer.numItems = normalData.length / 3;
-
-    planetVertexTextureCoordBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, planetVertexTextureCoordBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(textureCoordData), gl.STATIC_DRAW);
-    planetVertexTextureCoordBuffer.itemSize = 2;
-    planetVertexTextureCoordBuffer.numItems = textureCoordData.length / 2;
-
-    planetVertexPositionBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, planetVertexPositionBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexPositionData), gl.STATIC_DRAW);
-    planetVertexPositionBuffer.itemSize = 3;
-    planetVertexPositionBuffer.numItems = vertexPositionData.length / 3;
-
-    planetVertexIndexBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, planetVertexIndexBuffer);
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indexData), gl.STREAM_DRAW);
-    planetVertexIndexBuffer.itemSize = 1;
-    planetVertexIndexBuffer.numItems = indexData.length;
-
-    cubeVertexPositionBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexPositionBuffer);
-    vertices = [
-      // Front face
-      -1.0, -1.0, 1.0,
-       1.0, -1.0, 1.0,
-       1.0, 1.0, 1.0,
-      -1.0, 1.0, 1.0,
-
-      // Back face
-      -1.0, -1.0, -1.0,
-      -1.0, 1.0, -1.0,
-       1.0, 1.0, -1.0,
-       1.0, -1.0, -1.0,
-
-      // Top face
-      -1.0, 1.0, -1.0,
-      -1.0, 1.0, 1.0,
-       1.0, 1.0, 1.0,
-       1.0, 1.0, -1.0,
-
-      // Bottom face
-      -1.0, -1.0, -1.0,
-       1.0, -1.0, -1.0,
-       1.0, -1.0, 1.0,
-      -1.0, -1.0, 1.0,
-
-      // Right face
-       1.0, -1.0, -1.0,
-       1.0, 1.0, -1.0,
-       1.0, 1.0, 1.0,
-       1.0, -1.0, 1.0,
-
-      // Left face
-      -1.0, -1.0, -1.0,
-      -1.0, -1.0, 1.0,
-      -1.0, 1.0, 1.0,
-      -1.0, 1.0, -1.0
-    ];
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
-    cubeVertexPositionBuffer.itemSize = 3;
-    cubeVertexPositionBuffer.numItems = 24;
-
-    // -- SET cube TEXTURES --
-
-    cubeVertexTextureCoordBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexTextureCoordBuffer);
-    var textureCoords = [
-      // Front face
-      0.0, 0.0,
-      1.0, 0.0,
-      1.0, 1.0,
-      0.0, 1.0,
-
-      // Back face
-      1.0, 0.0,
-      1.0, 1.0,
-      0.0, 1.0,
-      0.0, 0.0,
-
-      // Top face
-      0.0, 1.0,
-      0.0, 0.0,
-      1.0, 0.0,
-      1.0, 1.0,
-
-      // Bottom face
-      1.0, 1.0,
-      0.0, 1.0,
-      0.0, 0.0,
-      1.0, 0.0,
-
-      // Right face
-      1.0, 0.0,
-      1.0, 1.0,
-      0.0, 1.0,
-      0.0, 0.0,
-
-      // Left face
-      0.0, 0.0,
-      1.0, 0.0,
-      1.0, 1.0,
-      0.0, 1.0
-    ];
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(textureCoords), gl.STATIC_DRAW);
-    cubeVertexTextureCoordBuffer.itemSize = 2;
-    cubeVertexTextureCoordBuffer.numItems = 24;
-
-    // -- SET CUBE VERTICES INDEX BUFFER --
-
-    cubeVertexIndexBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, cubeVertexIndexBuffer);
-
-    var cubeVertexIndices = [
-      0, 1, 2, 0, 2, 3, // Front face
-      4, 5, 6, 4, 6, 7, // Back face
-      8, 9, 10, 8, 10, 11, // Top face
-      12, 13, 14, 12, 14, 15, // Bottom face
-      16, 17, 18, 16, 18, 19, // Right face
-      20, 21, 22, 20, 22, 23 // Left face
-    ]
-
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(cubeVertexIndices), gl.STATIC_DRAW);
-    cubeVertexIndexBuffer.itemSize = 1;
-    cubeVertexIndexBuffer.numItems = 36;
-
-    squareVertexPositionBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexPositionBuffer);
-    vertices = [
-         1.0, 1.0, 0.0,
-        -1.0, 1.0, 0.0,
-         1.0, -1.0, 0.0,
-        -1.0, -1.0, 0.0
-    ];
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
-    squareVertexPositionBuffer.itemSize = 3;
-    squareVertexPositionBuffer.numItems = 4;
-
-    squareVertexTextureCoordBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexTextureCoordBuffer);
-
-    texvert = [1.0, 0.0,
-              0.0, 0.0,
-              1.0, 1.0,
-              0.0, 1.0];
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(texvert), gl.STATIC_DRAW);
-
-    squareVertexTextureCoordBuffer.itemSize = 2;
-    squareVertexTextureCoordBuffer.numItems = 4;
-
-
-}
-
 var planetSpinAngle = 0;
 var earthOrbitAngle = 0;
 var marsOrbitAngle = 0;
@@ -528,6 +201,7 @@ var sunOrbitAngle = 0;
 var textureAngle = 0;
 
 function drawScene() {
+
     gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
@@ -568,18 +242,18 @@ function drawScene() {
     gl.uniform1i(shaderProgram.uSampler1, 0);
     gl.uniform1i(shaderProgram.uUseMultiTextures, false);
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexPositionBuffer);
-    gl.vertexAttribPointer(shaderProgram.aVertexPosition, cubeVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, app.buffers["cubeVertexPositionBuffer"]);
+    gl.vertexAttribPointer(shaderProgram.aVertexPosition, app.buffers["cubeVertexPositionBuffer"].itemSize, gl.FLOAT, false, 0, 0);
 
     // NEW: Set-up the cube texture buffer.
-    gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexTextureCoordBuffer);
-    gl.vertexAttribPointer(shaderProgram.aTextureCoord1, cubeVertexTextureCoordBuffer.itemSize, gl.FLOAT, false, 0, 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, app.buffers["cubeVertexPositionBuffer"]);
+    gl.vertexAttribPointer(shaderProgram.aTextureCoord1, app.buffers["cubeVertexPositionBuffer"].itemSize, gl.FLOAT, false, 0, 0);
 
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, cubeVertexIndexBuffer);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, app.buffers["cubeVertexPositionBuffer"]);
 
     setMatrixUniforms();
 
-    gl.drawElements(gl.TRIANGLES, cubeVertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
+    gl.drawElements(gl.TRIANGLES, app.buffers["cubeVertexPositionBuffer"].numItems, gl.UNSIGNED_SHORT, 0);
 
     mvPopMatrix();
 
@@ -636,11 +310,11 @@ function drawScene() {
 
     mat4.scale(mvMatrix, mvMatrix, [15, 15, 15]);
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexPositionBuffer);
-    gl.vertexAttribPointer(shaderProgram.aVertexPosition, squareVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, app.buffers["squareVertexPositionBuffer"]);
+    gl.vertexAttribPointer(shaderProgram.aVertexPosition, app.buffers["squareVertexPositionBuffer"].itemSize, gl.FLOAT, false, 0, 0);
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexTextureCoordBuffer);
-    gl.vertexAttribPointer(shaderProgram.aTextureCoord1, squareVertexTextureCoordBuffer.itemSize, gl.FLOAT, false, 0, 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, app.buffers["squareVertexTextureCoordBuffer"]);
+    gl.vertexAttribPointer(shaderProgram.aTextureCoord1, app.buffers["squareVertexTextureCoordBuffer"].itemSize, gl.FLOAT, false, 0, 0);
 
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, textureCreator.getTextures()["saturnRingTexture"]);
@@ -648,7 +322,7 @@ function drawScene() {
     gl.uniform1i(shaderProgram.uSampler1, 0);
 
     setMatrixUniforms();
-    gl.drawArrays(gl.TRIANGLE_STRIP, 0, squareVertexPositionBuffer.numItems);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, app.buffers["squareVertexPositionBuffer"].numItems);
 
     gl.disable(gl.BLEND);
 
@@ -730,7 +404,9 @@ function webGLStart() {
 
     shaderProgram = app.initShaders(Config.shaderAttributes, Config.shaderUniforms);
 
-    initBuffers();
+    //initBuffers();
+
+    app.initialiseBuffers(Config.shaderBuffers);
 
     textureCreator = new TextureCreator(Config.textureNames, Config.textureImages);
 
