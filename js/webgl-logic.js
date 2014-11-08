@@ -17,7 +17,6 @@ var resetRotationMatrix = mat4.create();
 
 var moonRotationMatrix = mat4.create();
 
-
 var currentlyPressedKeys = {};
 
 function handleKeyDown(event) {
@@ -186,6 +185,7 @@ function getShader(gl, id) {
     return shader;
 }
 
+var app;
 
 var shaderProgram;
 
@@ -207,23 +207,23 @@ function initialiseShaderUniforms(shaderProgram, shaderUniforms) {
 }
 
 function initShaders() {
-    var fragmentShader = getShader(gl, "shader-fs");
-    var vertexShader = getShader(gl, "shader-vs");
-
-    shaderProgram = gl.createProgram();
-    gl.attachShader(shaderProgram, vertexShader);
-    gl.attachShader(shaderProgram, fragmentShader);
-    gl.linkProgram(shaderProgram);
-
-    if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
-        alert("Could not initialise shaders");
-    }
-
-    gl.useProgram(shaderProgram);
-
-    initialiseShaderAttributes(shaderProgram, Config.shaderAttributes);
-
-    initialiseShaderUniforms(shaderProgram, Config.shaderUniforms);
+//    var fragmentShader = getShader(gl, "shader-fs");
+//    var vertexShader = getShader(gl, "shader-vs");
+//
+//    shaderProgram = gl.createProgram();
+//    gl.attachShader(shaderProgram, vertexShader);
+//    gl.attachShader(shaderProgram, fragmentShader);
+//    gl.linkProgram(shaderProgram);
+//
+//    if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
+//        alert("Could not initialise shaders");
+//    }
+//
+//    gl.useProgram(shaderProgram);
+//
+//    initialiseShaderAttributes(shaderProgram, Config.shaderAttributes);
+//
+//    initialiseShaderUniforms(shaderProgram, Config.shaderUniforms);
 
 }
 
@@ -725,11 +725,12 @@ function webGLStart() {
     document.onkeyup = handleKeyUp;
 
     initGL(canvas);
-    initShaders();
-    initBuffers();
-    //initTextures(textureNames, textureImages);
 
-    //textureCreator.initialiseTextures();
+    app = new OrreryApp(gl);
+
+    shaderProgram = app.initShaders(Config.shaderAttributes, Config.shaderUniforms);
+
+    initBuffers();
 
     textureCreator = new TextureCreator(Config.textureNames, Config.textureImages);
 
