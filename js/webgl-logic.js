@@ -7,8 +7,6 @@ var y = 0;
 
 var textureCreator;
 
-//var textures = {};
-
 var mouseDown = false;
 var lastMouseX = null;
 var lastMouseY = null;
@@ -26,9 +24,9 @@ function handleKeyDown(event) {
     currentlyPressedKeys[event.keyCode] = true;
 
     if (String.fromCharCode(event.keyCode) == "S" && userSpin == true) {
-      userSpin = false;
+        userSpin = false;
     } else if (String.fromCharCode(event.keyCode) == "S" && userSpin == false) {
-      userSpin = true;
+        userSpin = true;
     }
 }
 
@@ -138,16 +136,15 @@ function setupScene() {
 }
 
 function initGL(canvas) {
-    
+
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-    
+
     try {
         gl = canvas.getContext("experimental-webgl");
         gl.viewportWidth = canvas.width;
         gl.viewportHeight = canvas.height;
-    } catch (e) {
-    }
+    } catch (e) {}
     if (!gl) {
         alert("Could not initialise WebGL, sorry :-(");
     }
@@ -192,6 +189,23 @@ function getShader(gl, id) {
 
 var shaderProgram;
 
+function initialiseShaderAttributes(shaderProgram, shaderAttributes) {
+
+    for (var i = 0, max = shaderAttributes.length; i < max; i += 1) {
+        shaderProgram[shaderAttributes[i]] = gl.getAttribLocation(shaderProgram, shaderAttributes[i]);
+        gl.enableVertexAttribArray(shaderProgram[shaderAttributes[i]]);
+    }
+
+}
+
+function initialiseShaderUniforms(shaderProgram, shaderUniforms) {
+
+    for (var i = 0, max = shaderUniforms.length; i < max; i += 1) {
+        shaderProgram[shaderUniforms[i]] = gl.getUniformLocation(shaderProgram, shaderUniforms[i]);
+    }
+
+}
+
 function initShaders() {
     var fragmentShader = getShader(gl, "shader-fs");
     var vertexShader = getShader(gl, "shader-vs");
@@ -207,34 +221,10 @@ function initShaders() {
 
     gl.useProgram(shaderProgram);
 
-    shaderProgram.vertexPositionAttribute = gl.getAttribLocation(shaderProgram, "aVertexPosition");
-    gl.enableVertexAttribArray(shaderProgram.vertexPositionAttribute);
+    initialiseShaderAttributes(shaderProgram, Config.shaderAttributes);
 
-    shaderProgram.textureCoordAttribute = gl.getAttribLocation(shaderProgram, "aTextureCoord1");
-    gl.enableVertexAttribArray(shaderProgram.textureCoordAttribute);
+    initialiseShaderUniforms(shaderProgram, Config.shaderUniforms);
 
-    shaderProgram.vertexNormalAttribute = gl.getAttribLocation(shaderProgram, "aVertexNormal");
-    gl.enableVertexAttribArray(shaderProgram.vertexNormalAttribute);
-
-    shaderProgram.pMatrixUniform = gl.getUniformLocation(shaderProgram, "uPMatrix");
-    shaderProgram.mvMatrixUniform = gl.getUniformLocation(shaderProgram, "uMVMatrix");
-
-    shaderProgram.tMatrixUniform = gl.getUniformLocation(shaderProgram, "uTMatrix");
-
-
-    shaderProgram.nMatrixUniform = gl.getUniformLocation(shaderProgram, "uNMatrix");
-    shaderProgram.samplerUniform1 = gl.getUniformLocation(shaderProgram, "uSampler1");
-    shaderProgram.samplerUniform2 = gl.getUniformLocation(shaderProgram, "uSampler2");
-    shaderProgram.samplerUniform3 = gl.getUniformLocation(shaderProgram, "uSampler3");
-    shaderProgram.useLightingUniform = gl.getUniformLocation(shaderProgram, "uUseLighting");
-    shaderProgram.materialShininessUniform = gl.getUniformLocation(shaderProgram, "uMaterialShininess");
-
-    shaderProgram.useMultipleTexturesUniform = gl.getUniformLocation(shaderProgram, "uUseMultiTextures");
-
-    shaderProgram.ambientColorUniform = gl.getUniformLocation(shaderProgram, "uAmbientColor");
-    shaderProgram.pointLightingLocationUniform = gl.getUniformLocation(shaderProgram, "uPointLightingLocation");
-    shaderProgram.pointLightingSpecularColorUniform = gl.getUniformLocation(shaderProgram, "uPointLightingSpecularColor");
-    shaderProgram.pointLightingDiffuseColorUniform = gl.getUniformLocation(shaderProgram, "uPointLightingDiffuseColor");
 }
 
 function handleLoadedTexture(texture) {
@@ -245,40 +235,40 @@ function handleLoadedTexture(texture) {
     console.log(texture.image);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 
-     // Check if the image is a power of 2 in both dimensions.
-  if (Utils.isPowerOfTwo(texture.image.width) && Utils.isPowerOfTwo(texture.image.height)) {
-     // Yes, it's a power of 2. Generate mips.
-     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
-     gl.generateMipmap(gl.TEXTURE_2D);
-  } else {
-     // No, it's not a power of 2. Turn of mips and set wrapping to clamp to edge
-     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-  }
+    // Check if the image is a power of 2 in both dimensions.
+    if (Utils.isPowerOfTwo(texture.image.width) && Utils.isPowerOfTwo(texture.image.height)) {
+        // Yes, it's a power of 2. Generate mips.
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+        gl.generateMipmap(gl.TEXTURE_2D);
+    } else {
+        // No, it's not a power of 2. Turn of mips and set wrapping to clamp to edge
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    }
 
     gl.bindTexture(gl.TEXTURE_2D, null);
 }
 
 function initTextures(imageNames, imageURLs) {
-    
-    for(var i=0; i < imageURLs.length; i++){
+
+    for (var i = 0; i < imageURLs.length; i++) {
 
         textures[imageNames[i]] = gl.createTexture();
 
         textures[imageNames[i]].image = new Image();
 
-        textures[imageNames[i]].image.onload = (function(value){
-           return function(){
-               handleLoadedTexture(textures[textureNames[value]]);
-           }
+        textures[imageNames[i]].image.onload = (function (value) {
+            return function () {
+                handleLoadedTexture(textures[textureNames[value]]);
+            }
         })(i);
 
         textures[imageNames[i]].image.src = imageURLs[i];
 
     }
 
-   // return textureArray;
+    // return textureArray;
 }
 
 
@@ -301,15 +291,15 @@ function mvPopMatrix() {
 }
 
 function setMatrixUniforms() {
-    gl.uniformMatrix4fv(shaderProgram.pMatrixUniform, false, pMatrix);
-    gl.uniformMatrix4fv(shaderProgram.mvMatrixUniform, false, mvMatrix);
-    gl.uniformMatrix4fv(shaderProgram.tMatrixUniform, false, tMatrix);
+    gl.uniformMatrix4fv(shaderProgram.uPMatrix, false, pMatrix);
+    gl.uniformMatrix4fv(shaderProgram.uMVMatrix, false, mvMatrix);
+    gl.uniformMatrix4fv(shaderProgram.uTMatrix, false, tMatrix);
 
     var normalMatrix = mat3.create();
-    
+
     mat3.normalFromMat4(normalMatrix, mvMatrix);
 
-    gl.uniformMatrix3fv(shaderProgram.nMatrixUniform, false, normalMatrix);
+    gl.uniformMatrix3fv(shaderProgram.uNMatrix, false, normalMatrix);
 }
 
 var planetVertexPositionBuffer;
@@ -331,12 +321,12 @@ function initBuffers() {
     var vertexPositionData = [];
     var normalData = [];
     var textureCoordData = [];
-    for (var latNumber=0; latNumber <= latitudeBands; latNumber++) {
+    for (var latNumber = 0; latNumber <= latitudeBands; latNumber++) {
         var theta = latNumber * Math.PI / latitudeBands;
         var sinTheta = Math.sin(theta);
         var cosTheta = Math.cos(theta);
 
-        for (var longNumber=0; longNumber <= longitudeBands; longNumber++) {
+        for (var longNumber = 0; longNumber <= longitudeBands; longNumber++) {
             var phi = longNumber * 2 * Math.PI / longitudeBands;
             var sinPhi = Math.sin(phi);
             var cosPhi = Math.cos(phi);
@@ -359,8 +349,8 @@ function initBuffers() {
     }
 
     var indexData = [];
-    for (var latNumber=0; latNumber < latitudeBands; latNumber++) {
-        for (var longNumber=0; longNumber < longitudeBands; longNumber++) {
+    for (var latNumber = 0; latNumber < latitudeBands; latNumber++) {
+        for (var longNumber = 0; longNumber < longitudeBands; longNumber++) {
             var first = (latNumber * (longitudeBands + 1)) + longNumber;
             var second = first + longitudeBands + 1;
             indexData.push(first);
@@ -401,40 +391,40 @@ function initBuffers() {
     gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexPositionBuffer);
     vertices = [
       // Front face
-      -1.0, -1.0,  1.0,
-       1.0, -1.0,  1.0,
-       1.0,  1.0,  1.0,
-      -1.0,  1.0,  1.0,
+      -1.0, -1.0, 1.0,
+       1.0, -1.0, 1.0,
+       1.0, 1.0, 1.0,
+      -1.0, 1.0, 1.0,
 
       // Back face
       -1.0, -1.0, -1.0,
-      -1.0,  1.0, -1.0,
-       1.0,  1.0, -1.0,
+      -1.0, 1.0, -1.0,
+       1.0, 1.0, -1.0,
        1.0, -1.0, -1.0,
 
       // Top face
-      -1.0,  1.0, -1.0,
-      -1.0,  1.0,  1.0,
-       1.0,  1.0,  1.0,
-       1.0,  1.0, -1.0,
+      -1.0, 1.0, -1.0,
+      -1.0, 1.0, 1.0,
+       1.0, 1.0, 1.0,
+       1.0, 1.0, -1.0,
 
       // Bottom face
       -1.0, -1.0, -1.0,
        1.0, -1.0, -1.0,
-       1.0, -1.0,  1.0,
-      -1.0, -1.0,  1.0,
+       1.0, -1.0, 1.0,
+      -1.0, -1.0, 1.0,
 
       // Right face
        1.0, -1.0, -1.0,
-       1.0,  1.0, -1.0,
-       1.0,  1.0,  1.0,
-       1.0, -1.0,  1.0,
+       1.0, 1.0, -1.0,
+       1.0, 1.0, 1.0,
+       1.0, -1.0, 1.0,
 
       // Left face
       -1.0, -1.0, -1.0,
-      -1.0, -1.0,  1.0,
-      -1.0,  1.0,  1.0,
-      -1.0,  1.0, -1.0
+      -1.0, -1.0, 1.0,
+      -1.0, 1.0, 1.0,
+      -1.0, 1.0, -1.0
     ];
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
     cubeVertexPositionBuffer.itemSize = 3;
@@ -491,12 +481,12 @@ function initBuffers() {
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, cubeVertexIndexBuffer);
 
     var cubeVertexIndices = [
-      0, 1, 2,      0, 2, 3,    // Front face
-      4, 5, 6,      4, 6, 7,    // Back face
-      8, 9, 10,     8, 10, 11,  // Top face
-      12, 13, 14,   12, 14, 15, // Bottom face
-      16, 17, 18,   16, 18, 19, // Right face
-      20, 21, 22,   20, 22, 23  // Left face
+      0, 1, 2, 0, 2, 3, // Front face
+      4, 5, 6, 4, 6, 7, // Back face
+      8, 9, 10, 8, 10, 11, // Top face
+      12, 13, 14, 12, 14, 15, // Bottom face
+      16, 17, 18, 16, 18, 19, // Right face
+      20, 21, 22, 20, 22, 23 // Left face
     ]
 
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(cubeVertexIndices), gl.STATIC_DRAW);
@@ -506,26 +496,26 @@ function initBuffers() {
     squareVertexPositionBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexPositionBuffer);
     vertices = [
-         1.0,  1.0,  0.0,
-        -1.0,  1.0,  0.0,
-         1.0, -1.0,  0.0,
-        -1.0, -1.0,  0.0
+         1.0, 1.0, 0.0,
+        -1.0, 1.0, 0.0,
+         1.0, -1.0, 0.0,
+        -1.0, -1.0, 0.0
     ];
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
     squareVertexPositionBuffer.itemSize = 3;
     squareVertexPositionBuffer.numItems = 4;
 
-    squareVertexTextureCoordBuffer=gl.createBuffer();
+    squareVertexTextureCoordBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexTextureCoordBuffer);
 
-    texvert= [1.0, 0.0,
+    texvert = [1.0, 0.0,
               0.0, 0.0,
               1.0, 1.0,
               0.0, 1.0];
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(texvert), gl.STATIC_DRAW);
 
-    squareVertexTextureCoordBuffer.itemSize=2;
-    squareVertexTextureCoordBuffer.numItems=4;
+    squareVertexTextureCoordBuffer.itemSize = 2;
+    squareVertexTextureCoordBuffer.numItems = 4;
 
 
 }
@@ -542,15 +532,16 @@ function drawScene() {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     mat4.perspective(pMatrix, 45, gl.viewportWidth / gl.viewportHeight, 0.1, 2000.0);
-    
+
     // 2 * Math.PI = 360 degrees in radians.
     // We want to move the clouds of the earth along the X-axis (not the land and see however).
     // No of radians to move / 360 degrees in radians.
     mat4.translate(tMatrix, tMatrix, [Utils.degToRad(0.1) / (2 * Math.PI), 0, 0]);
 
-    var lighting  = true;
-    gl.uniform1i(shaderProgram.useLightingUniform, lighting);
+    var lighting = true;
     
+    gl.uniform1i(shaderProgram.uUseLighting, lighting);
+
     mat4.identity(mvMatrix);
 
     var lightPos = [0.0, 0.0, 0.0, 1.0];
@@ -560,7 +551,7 @@ function drawScene() {
 
     vec4.transformMat4(lightPos, lightPos, mvMatrix);
 
-     // CG - Handle scene rotations (via mouse events)
+    // CG - Handle scene rotations (via mouse events)
     mat4.multiply(mvMatrix, mvMatrix, moonRotationMatrix);
 
     // CG - Handle scene zooming (via mouse wheel events)
@@ -574,15 +565,15 @@ function drawScene() {
 
     gl.bindTexture(gl.TEXTURE_2D, textureCreator.getTextures()["spaceTexture"]);
 
-    gl.uniform1i(shaderProgram.samplerUniform1, 0);
-    gl.uniform1i(shaderProgram.useMultipleTexturesUniform, false);
+    gl.uniform1i(shaderProgram.uSampler1, 0);
+    gl.uniform1i(shaderProgram.uUseMultiTextures, false);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexPositionBuffer);
-    gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, cubeVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+    gl.vertexAttribPointer(shaderProgram.aVertexPosition, cubeVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
     // NEW: Set-up the cube texture buffer.
     gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexTextureCoordBuffer);
-    gl.vertexAttribPointer(shaderProgram.textureCoordAttribute, cubeVertexTextureCoordBuffer.itemSize, gl.FLOAT, false, 0, 0);
+    gl.vertexAttribPointer(shaderProgram.aTextureCoord1, cubeVertexTextureCoordBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, cubeVertexIndexBuffer);
 
@@ -596,7 +587,7 @@ function drawScene() {
     if (lighting) {
 
         gl.uniform3f(
-            shaderProgram.ambientColorUniform,
+            shaderProgram.uAmbientColor,
             parseFloat(0.2),
             parseFloat(0.2),
             parseFloat(0.2)
@@ -604,7 +595,7 @@ function drawScene() {
 
         //CG - Move the position of the point light so that it is in the centre of the sun.
         gl.uniform3f(
-            shaderProgram.pointLightingLocationUniform,
+            shaderProgram.uPointLightingLocation,
             parseFloat(lightPos[0]),
             parseFloat(lightPos[1]),
             parseFloat(lightPos[2])
@@ -612,7 +603,7 @@ function drawScene() {
 
         //CG - Set the point lighting colour to full (so we can see it above the ambient lighting).
         gl.uniform3f(
-            shaderProgram.pointLightingDiffuseColorUniform,
+            shaderProgram.uPointLightingDiffuseColor,
             parseFloat(0.8),
             parseFloat(0.8),
             parseFloat(0.8)
@@ -620,13 +611,13 @@ function drawScene() {
 
         //CG
         gl.uniform3f(
-            shaderProgram.pointLightingSpecularColorUniform,
+            shaderProgram.uPointLightingSpecularColor,
             parseFloat(0.2),
             parseFloat(0.2),
             parseFloat(0.2)
         );
 
-        gl.uniform1f(shaderProgram.materialShininessUniform, parseFloat(10));
+        gl.uniform1f(shaderProgram.uMaterialShininess, parseFloat(10));
     }
 
     // CG - Push a new matrix for the scene.
@@ -634,10 +625,10 @@ function drawScene() {
 
     // CG - Kick off the rendering (start from the Sun and work our way down the tree).
     sun.drawOrbital();
-    
+
     //Pop the matrix saved from earlier in order to render out the saturn ring last.
     mvMatrix = lastMatrixStack.pop();
-    
+
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
     gl.enable(gl.BLEND);
 
@@ -646,16 +637,15 @@ function drawScene() {
     mat4.scale(mvMatrix, mvMatrix, [15, 15, 15]);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexPositionBuffer);
-    gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, squareVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+    gl.vertexAttribPointer(shaderProgram.aVertexPosition, squareVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexTextureCoordBuffer);
-    gl.vertexAttribPointer(shaderProgram.textureCoordAttribute, squareVertexTextureCoordBuffer.itemSize, gl.FLOAT, false, 0, 0);
+    gl.vertexAttribPointer(shaderProgram.aTextureCoord1, squareVertexTextureCoordBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, textureCreator.getTextures()["saturnRingTexture"]);
-    //gl.bindTexture(gl.TEXTURE_2D, saturnRingTexture);
 
-    gl.uniform1i(shaderProgram.samplerUniform, 0);
+    gl.uniform1i(shaderProgram.uSampler1, 0);
 
     setMatrixUniforms();
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, squareVertexPositionBuffer.numItems);
@@ -689,30 +679,30 @@ function animate() {
 
 function handleKeys() {
     if (currentlyPressedKeys[69]) {
-      // E
-      z -= 0.5;
+        // E
+        z -= 0.5;
     }
     if (currentlyPressedKeys[87]) {
-      // W
-      z += 0.5;
+        // W
+        z += 0.5;
     }
     if (currentlyPressedKeys[37]) {
-      // Left cursor key
-      x += 0.5;
+        // Left cursor key
+        x += 0.5;
     }
     if (currentlyPressedKeys[39]) {
-      // Right cursor key
-      x -= 0.5;
+        // Right cursor key
+        x -= 0.5;
     }
     if (currentlyPressedKeys[38]) {
-      // Up cursor key
-      y -= 0.5;
+        // Up cursor key
+        y -= 0.5;
     }
     if (currentlyPressedKeys[40]) {
-      // Down cursor key
-      y += 0.5;
+        // Down cursor key
+        y += 0.5;
     }
-  }
+}
 
 
 

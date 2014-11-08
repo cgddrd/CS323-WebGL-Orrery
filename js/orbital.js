@@ -66,27 +66,27 @@ Orbital.prototype.drawOrbital = function () {
 
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, this.textures[0]);
-    gl.uniform1i(shaderProgram.samplerUniform1, 0);
+    gl.uniform1i(shaderProgram.uSampler1, 0);
 
     if (this.textures.length > 1) {
 
         gl.activeTexture(gl.TEXTURE1);
         gl.bindTexture(gl.TEXTURE_2D, this.textures[1]);
-        gl.uniform1i(shaderProgram.samplerUniform2, 1);
+        gl.uniform1i(shaderProgram.uSampler2, 1);
 
         gl.activeTexture(gl.TEXTURE2);
         gl.bindTexture(gl.TEXTURE_2D, this.textures[2]);
-        gl.uniform1i(shaderProgram.samplerUniform3, 2);
+        gl.uniform1i(shaderProgram.uSampler3, 2);
 
-        gl.uniform1i(shaderProgram.useMultipleTexturesUniform, true);
+        gl.uniform1i(shaderProgram.uUseMultiTextures, true);
 
     } else {
-        gl.uniform1i(shaderProgram.useMultipleTexturesUniform, false);
+        gl.uniform1i(shaderProgram.uUseMultiTextures, false);
     }
 
     if (this.name === "sun") {
         gl.uniform3f(
-            shaderProgram.ambientColorUniform,
+            shaderProgram.uAmbientColor,
             parseFloat(0.9),
             parseFloat(0.9),
             parseFloat(0.9)
@@ -94,13 +94,13 @@ Orbital.prototype.drawOrbital = function () {
     }
 
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexPositionBuffer);
-    gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, this.vertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+    gl.vertexAttribPointer(shaderProgram.aVertexPosition, this.vertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexTextureCoordBuffer);
-    gl.vertexAttribPointer(shaderProgram.textureCoordAttribute, this.vertexTextureCoordBuffer.itemSize, gl.FLOAT, false, 0, 0);
+    gl.vertexAttribPointer(shaderProgram.aTextureCoord1, this.vertexTextureCoordBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexNormalBuffer);
-    gl.vertexAttribPointer(shaderProgram.vertexNormalAttribute, this.vertexNormalBuffer.itemSize, gl.FLOAT, false, 0, 0);
+    gl.vertexAttribPointer(shaderProgram.aVertexNormal, this.vertexNormalBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.vertexIndexBuffer);
 
