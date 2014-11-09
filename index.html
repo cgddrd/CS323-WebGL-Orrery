@@ -44,12 +44,15 @@
     void main(void) {
         vec3 lightWeighting;
 
-        vec3 lightDirection = normalize(uPointLightingLocation - vPosition.xyz);
+        vec3 lightDirection = normalize(uPointLightingLocation.xyz - vPosition.xyz);
         vec3 normal = normalize(vTransformedNormal);
 
         vec4 dayColor = texture2D(uSampler1, vec2(vTextureCoord1.s, vTextureCoord1.t));
         vec4 nightColor = texture2D(uSampler3, vec2(vTextureCoord1.s, vTextureCoord1.t));
         vec4 cloudColor = texture2D(uSampler2, vec2(vTextureCoord2.s, vTextureCoord2.t));
+
+        highp float d = length(uPointLightingLocation.xyz - vPosition.xyz);
+        highp float attenuation = min((1.0/(0.0001 + (0.0001 * d) + (0.0001 * (d*d)))), 1.0);
 
         float specularLightWeighting = 0.0;
 
@@ -63,13 +66,13 @@
 
         float diffuseLightWeighting = max(dot(normalize(normal), lightDirection), 0.0);
 
-        diffuseLightWeighting = clamp( diffuseLightWeighting * diffusePower, -1.0, 1.0);
+        diffuseLightWeighting = clamp(diffuseLightWeighting * diffusePower, -1.0, 1.0);
 
         //float mixAmount = diffuseLightWeighting * 0.2 + 0.2;
 
         vec3 color = mix(nightColor.rgb, dayColor.rgb, diffuseLightWeighting);
 
-        lightWeighting = uAmbientColor + uPointLightingSpecularColor * specularLightWeighting + uPointLightingDiffuseColor * diffuseLightWeighting;
+        lightWeighting = ((uAmbientColor) + ((uPointLightingSpecularColor) * specularLightWeighting) + ((uPointLightingDiffuseColor) * diffuseLightWeighting)) * attenuation;
 
         vec4 fragmentColor1;
         vec4 fragmentColor2;
@@ -85,7 +88,7 @@
 
             //gl_FragColor = vec4((fragmentColor1.rgb * (fragmentColor1.a - fragmentColor2.a) + fragmentColor2.rgb * fragmentColor2.a) * lightWeighting, fragmentColor1.a * 1.0);
 
-            gl_FragColor = vec4((color + (fragmentColor2.rgb * fragmentColor2.a)) * lightWeighting, dayColor.a * 1.0);
+            gl_FragColor = vec4((color + (fragmentColor2.rgb * fragmentColor2.a)) * lightWeighting, dayColor.a);
 
         } else {
 

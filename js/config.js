@@ -32,7 +32,7 @@ var Config  = {
         {
             name: "sun",
             spinVelocity: 5,
-            scaleFactor: 3,
+            scaleFactor: 4,
             orbitVelocity: 0,
             orbitRadius: 0,
             orbitEccentricity: 0,
@@ -46,7 +46,7 @@ var Config  = {
             spinVelocity: 40,
             scaleFactor: 0.3,
             orbitVelocity: 120,
-            orbitRadius: -10,
+            orbitRadius: -20,
             orbitEccentricity: 0.5
 
         },
@@ -56,7 +56,7 @@ var Config  = {
             spinVelocity: 35,
             scaleFactor: 0.5,
             orbitVelocity: 110,
-            orbitRadius: -20,
+            orbitRadius: -40,
             orbitEccentricity: 0.5
 
         },
@@ -66,7 +66,7 @@ var Config  = {
             spinVelocity: 30,
             scaleFactor: 0,
             orbitVelocity: 100,
-            orbitRadius: -30,
+            orbitRadius: -60,
             orbitEccentricity: 0.5,
             children: ["moon"]
 
@@ -87,7 +87,7 @@ var Config  = {
             spinVelocity: 30,
             scaleFactor: 0,
             orbitVelocity: 90,
-            orbitRadius: -40,
+            orbitRadius: -80,
             orbitEccentricity: 0.5
 
         },
@@ -97,17 +97,7 @@ var Config  = {
             spinVelocity: 10,
             scaleFactor: 2.5,
             orbitVelocity: 50,
-            orbitRadius: -50,
-            orbitEccentricity: 0.5
-
-        },
-
-        {
-            name: "jupiter",
-            spinVelocity: 10,
-            scaleFactor: 2.5,
-            orbitVelocity: 50,
-            orbitRadius: -50,
+            orbitRadius: -100,
             orbitEccentricity: 0.5
 
         },
@@ -117,7 +107,7 @@ var Config  = {
             spinVelocity: 10,
             scaleFactor: 1.8,
             orbitVelocity: 40,
-            orbitRadius: -60,
+            orbitRadius: -130,
             orbitEccentricity: 0.5
 
         },
@@ -127,7 +117,7 @@ var Config  = {
             spinVelocity: 15,
             scaleFactor: 1.5,
             orbitVelocity: 20,
-            orbitRadius: -70,
+            orbitRadius: -170,
             orbitEccentricity: 0.5
 
         },
@@ -137,7 +127,7 @@ var Config  = {
             spinVelocity: 15,
             scaleFactor: 1.3,
             orbitVelocity: 10,
-            orbitRadius: -80,
+            orbitRadius: -190,
             orbitEccentricity: 0.5
 
         }
