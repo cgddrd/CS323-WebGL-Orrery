@@ -18,14 +18,14 @@ function Orbital(name, textures, orbitVelocity, spinVelocity, scaleFactor, buffe
 Orbital.prototype.drawOrbital = function (isSpinEnabled) {
 
     //Push matrix for planet orbit.
-    mvPushMatrix();
+    scene.pushMVMatrix();
 
     if (isSpinEnabled) {
         this.increaseSpin();
     }
 
     if (this.orbitVelocity > 0) {
-        mat4.rotate(mvMatrix, mvMatrix, Utils.degToRad(this.orbitAngle), [0, 1, 0]);
+        mat4.rotate(scene.getMVMatrix(), scene.getMVMatrix(), Utils.degToRad(this.orbitAngle), [0, 1, 0]);
     }
 
     if (this.initialOrbitRadius != 0) {
@@ -36,12 +36,12 @@ Orbital.prototype.drawOrbital = function (isSpinEnabled) {
         this.orbitRadius = r;
 
         //CG - Translate using this radius.
-        mat4.translate(mvMatrix, mvMatrix, [this.orbitRadius, 0, 0]);
+        mat4.translate(scene.getMVMatrix(), scene.getMVMatrix(), [this.orbitRadius, 0, 0]);
 
     }
 
     //Push matrix for planet.
-    mvPushMatrix();
+    scene.pushMVMatrix();
 
     if (this.children.length > 0) {
 
@@ -54,10 +54,10 @@ Orbital.prototype.drawOrbital = function (isSpinEnabled) {
     }
 
 
-    mat4.rotate(mvMatrix, mvMatrix, Utils.degToRad(this.spinAngle), [0, 1, 0]);
+    mat4.rotate(scene.getMVMatrix(), scene.getMVMatrix(), Utils.degToRad(this.spinAngle), [0, 1, 0]);
 
     if (this.scaleFactor != 0) {
-        mat4.scale(mvMatrix, mvMatrix, [this.scaleFactor, this.scaleFactor, this.scaleFactor]);
+        mat4.scale(scene.getMVMatrix(), scene.getMVMatrix(), [this.scaleFactor, this.scaleFactor, this.scaleFactor]);
     }
 
     gl.activeTexture(gl.TEXTURE0);
@@ -97,20 +97,20 @@ Orbital.prototype.drawOrbital = function (isSpinEnabled) {
 
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.buffers["planetVertexIndexBuffer"]);
 
-    setMatrixUniforms();
+    scene.setMatrixUniforms(shaderProgram);
 
     gl.drawElements(gl.TRIANGLES, this.buffers["planetVertexIndexBuffer"].numItems, gl.UNSIGNED_SHORT, 0);
 
-    mvPopMatrix();
+    scene.popMVMatrix();
 
     if (this.name === "saturn") {
 
         //CG - Push the current matrix for saturn to another stack ready to render the rings of saturn last.
-        lastMatrixStack.push(mvMatrix);
+        scene.getLastMatrixStack().push(scene.getMVMatrix());
 
     }
 
-    mvPopMatrix();
+    scene.popMVMatrix();
 
 }
 

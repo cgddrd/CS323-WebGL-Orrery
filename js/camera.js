@@ -110,27 +110,27 @@ Camera.prototype.handleMouseWheel = function(event) {
 Camera.prototype.handleKeys = function() {
     if (this.currentlyPressedKeys[69]) {
         // E
-        z -= 0.5;
+        this.z -= 0.5;
     }
     if (this.currentlyPressedKeys[87]) {
         // W
-        z += 0.5;
+        this.z += 0.5;
     }
     if (this.currentlyPressedKeys[37]) {
         // Left cursor key
-        x += 0.5;
+        this.x += 0.5;
     }
     if (this.currentlyPressedKeys[39]) {
         // Right cursor key
-        x -= 0.5;
+        this.x -= 0.5;
     }
     if (this.currentlyPressedKeys[38]) {
         // Up cursor key
-        y -= 0.5;
+        this.y -= 0.5;
     }
     if (this.currentlyPressedKeys[40]) {
         // Down cursor key
-        y += 0.5;
+        this.y += 0.5;
     }
 }
 

@@ -4,6 +4,7 @@ var textureCreator;
 var app;
 var shaderProgram;
 var camera;
+var scene;
 
 function setupScene() {
 
@@ -54,53 +55,23 @@ function initGL(canvas) {
     }
 }
 
-var mvMatrix = mat4.create();
-var tMatrix = mat4.create();
-var mvMatrixStack = [];
-
-var lastMatrixStack = [];
-var pMatrix = mat4.create();
-
-function mvPushMatrix() {
-    mvMatrixStack.push(mat4.clone(mvMatrix));
-}
-
-function mvPopMatrix() {
-    if (mvMatrixStack.length == 0) {
-        throw "Invalid popMatrix!";
-    }
-    mvMatrix = mvMatrixStack.pop();
-}
-
-function setMatrixUniforms() {
-    gl.uniformMatrix4fv(shaderProgram.uPMatrix, false, pMatrix);
-    gl.uniformMatrix4fv(shaderProgram.uMVMatrix, false, mvMatrix);
-    gl.uniformMatrix4fv(shaderProgram.uTMatrix, false, tMatrix);
-
-    var normalMatrix = mat3.create();
-
-    mat3.normalFromMat4(normalMatrix, mvMatrix);
-
-    gl.uniformMatrix3fv(shaderProgram.uNMatrix, false, normalMatrix);
-}
-
 function drawScene() {
 
     gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    mat4.perspective(pMatrix, 45, gl.viewportWidth / gl.viewportHeight, 0.1, 2000.0);
+    mat4.perspective(scene.getPMatrix(), 45, gl.viewportWidth / gl.viewportHeight, 0.1, 2000.0);
 
     // 2 * Math.PI = 360 degrees in radians.
     // We want to move the clouds of the earth along the X-axis (not the land and see however).
     // No of radians to move / 360 degrees in radians.
-    mat4.translate(tMatrix, tMatrix, [Utils.degToRad(0.1) / (2 * Math.PI), 0, 0]);
+    mat4.translate(scene.getTMatrix(), scene.getTMatrix(), [Utils.degToRad(0.1) / (2 * Math.PI), 0, 0]);
 
     var lighting = true;
     
     gl.uniform1i(shaderProgram.uUseLighting, lighting);
 
-    mat4.identity(mvMatrix);
+    mat4.identity(scene.getMVMatrix());
 
     var lightPos = [0.0, 0.0, 0.0, 1.0];
 
@@ -108,19 +79,19 @@ function drawScene() {
     //mat4.multiply(mvMatrix, mvMatrix, camera.getRotationMatrix());
 
     // CG - Move based on the user's input.
-    mat4.translate(mvMatrix, mvMatrix, [camera.getXPosition(), camera.getYPosition(), camera.getZPosition()]);
+    mat4.translate(scene.getMVMatrix(), scene.getMVMatrix(), [camera.getXPosition(), camera.getYPosition(), camera.getZPosition()]);
 
-    vec4.transformMat4(lightPos, lightPos, mvMatrix);
+    vec4.transformMat4(lightPos, lightPos, scene.getMVMatrix());
 
     // CG - Handle scene rotations (via mouse events)
-    mat4.multiply(mvMatrix, mvMatrix, camera.getRotationMatrix());
+    mat4.multiply(scene.getMVMatrix(), scene.getMVMatrix(), camera.getRotationMatrix());
 
     // CG - Handle scene zooming (via mouse wheel events)
-    mat4.scale(mvMatrix, mvMatrix, [camera.getZoomFactor(), camera.getZoomFactor(), camera.getZoomFactor()]);
+    mat4.scale(scene.getMVMatrix(), scene.getMVMatrix(), [camera.getZoomFactor(), camera.getZoomFactor(), camera.getZoomFactor()]);
 
-    mvPushMatrix();
+    scene.pushMVMatrix();
 
-    mat4.scale(mvMatrix, mvMatrix, [500, 500, 500]);
+    mat4.scale(scene.getMVMatrix(), scene.getMVMatrix(), [500, 500, 500]);
 
     gl.activeTexture(gl.TEXTURE0);
 
@@ -138,11 +109,11 @@ function drawScene() {
 
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, app.buffers["cubeVertexIndexBuffer"]);
 
-    setMatrixUniforms();
+    scene.setMatrixUniforms(shaderProgram);
 
     gl.drawElements(gl.TRIANGLES, app.buffers["cubeVertexIndexBuffer"].numItems, gl.UNSIGNED_SHORT, 0);
 
-    mvPopMatrix();
+    scene.popMVMatrix();
 
     //CG - Add lighting after we have rendered the skybox.
     if (lighting) {
@@ -182,21 +153,21 @@ function drawScene() {
     }
 
     // CG - Push a new matrix for the scene.
-    mvPushMatrix();
+    scene.pushMVMatrix();
 
     // CG - Kick off the rendering (start from the Sun and work our way down the tree).
     sun.drawOrbital(camera.isSpinEnabled());
 
     //Pop the matrix saved from earlier in order to render out the saturn ring last.
 
-    mvMatrix = lastMatrixStack.pop();
+    scene.setMVMatrix(scene.getLastMatrixStack().pop());
 
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
     gl.enable(gl.BLEND);
 
-    mat4.rotate(mvMatrix, mvMatrix, Utils.degToRad(90), [1, 0, 0]);
+    mat4.rotate(scene.getMVMatrix(), scene.getMVMatrix(), Utils.degToRad(90), [1, 0, 0]);
 
-    mat4.scale(mvMatrix, mvMatrix, [15, 15, 15]);
+    mat4.scale(scene.getMVMatrix(), scene.getMVMatrix(), [15, 15, 15]);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, app.buffers["squareVertexPositionBuffer"]);
     gl.vertexAttribPointer(shaderProgram.aVertexPosition, app.buffers["squareVertexPositionBuffer"].itemSize, gl.FLOAT, false, 0, 0);
@@ -209,13 +180,13 @@ function drawScene() {
 
     gl.uniform1i(shaderProgram.uSampler1, 0);
 
-    setMatrixUniforms();
+    scene.setMatrixUniforms(shaderProgram);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, app.buffers["squareVertexPositionBuffer"].numItems);
 
     gl.disable(gl.BLEND);
 
     //Finally pop the top-level scene matrix.
-    mvPopMatrix();
+    scene.popMVMatrix();
 
 }
 
@@ -241,6 +212,8 @@ function webGLStart() {
     app.initialiseBuffers(Config.shaderBuffers);
 
     textureCreator = new TextureCreator(Config.textureNames, Config.textureImages);
+
+    scene = new Scene(gl);
 
     setupScene();
 
