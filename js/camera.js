@@ -12,6 +12,7 @@ function Camera(canvas) {
     this.x = 0;
     this.y = 0;
     this.cameraRotationMatrix = mat4.create();
+
     this.init(canvas);
 
 }
