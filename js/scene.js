@@ -115,7 +115,7 @@ Scene.prototype.getRootSceneObject = function () {
     return this.rootSceneObject;
 }
 
-Scene.prototype.drawScene = function() {
+Scene.prototype.drawScene = function () {
 
     gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -125,11 +125,9 @@ Scene.prototype.drawScene = function() {
     // 2 * Math.PI = 360 degrees in radians.
     // We want to move the clouds of the earth along the X-axis (not the land and see however).
     // No of radians to move / 360 degrees in radians.
-    mat4.translate(this.getTMatrix(), this.getTMatrix(), [Utils.degToRad(0.1) / (2 * Math.PI), 0, 0]);
+    mat4.translate(this.getTMatrix(), this.getTMatrix(), [Utils.degToRad(Config.cloudRotationSpeed) / (2 * Math.PI), 0, 0]);
 
-    var lighting = true;
-
-    gl.uniform1i(shaderProgram.uUseLighting, lighting);
+    gl.uniform1i(shaderProgram.uUseLighting, Config.lightingActive);
 
     mat4.identity(this.getMVMatrix());
 
@@ -176,13 +174,13 @@ Scene.prototype.drawScene = function() {
     this.popMVMatrix();
 
     //CG - Add lighting after we have rendered the skybox.
-    if (lighting) {
+    if (Config.lightingActive) {
 
         gl.uniform3f(
             shaderProgram.uAmbientColor,
-            parseFloat(0.2),
-            parseFloat(0.2),
-            parseFloat(0.2)
+            parseFloat(Config.ambientLightingColor),
+            parseFloat(Config.ambientLightingColor),
+            parseFloat(Config.ambientLightingColor)
         );
 
         //CG - Move the position of the point light so that it is in the centre of the sun.
@@ -196,20 +194,20 @@ Scene.prototype.drawScene = function() {
         //CG - Set the point lighting colour to full (so we can see it above the ambient lighting).
         gl.uniform3f(
             shaderProgram.uPointLightingDiffuseColor,
-            parseFloat(0.8),
-            parseFloat(0.8),
-            parseFloat(0.8)
+            parseFloat(Config.diffuseLightingColor),
+            parseFloat(Config.diffuseLightingColor),
+            parseFloat(Config.diffuseLightingColor)
         );
 
         //CG
         gl.uniform3f(
             shaderProgram.uPointLightingSpecularColor,
-            parseFloat(0.2),
-            parseFloat(0.2),
-            parseFloat(0.2)
+            parseFloat(Config.specularLightingColor),
+            parseFloat(Config.specularLightingColor),
+            parseFloat(Config.specularLightingColor)
         );
 
-        gl.uniform1f(shaderProgram.uMaterialShininess, parseFloat(10));
+        gl.uniform1f(shaderProgram.uMaterialShininess, parseFloat(Config.specularMaterialShineLevel));
     }
 
     // CG - Push a new matrix for the scene.

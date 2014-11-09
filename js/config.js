@@ -13,6 +13,20 @@ var Config  = {
 
     startZoom: 50,
 
+    lightingActive: true,
+
+    ellipticalOrbitsActive: true,
+
+    ambientLightingColor: 0.2,
+
+    diffuseLightingColor: 0.8,
+
+    specularLightingColor: 0.2,
+
+    specularMaterialShineLevel: 10,
+
+    cloudRotationSpeed: 0.1,
+
     scenePlanets: [
 
         {

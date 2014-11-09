@@ -31,9 +31,18 @@ Orbital.prototype.drawOrbital = function (isSpinEnabled) {
     if (this.initialOrbitRadius != 0) {
 
         //CG - Calculate the change in the radius (used for the translation).
-        var r = (this.initialOrbitRadius * (1 + this.eccentricity)) / (1 + this.eccentricity * Math.cos(Utils.degToRad(this.orbitAngle)));
 
-        this.orbitRadius = r;
+        if (Config.ellipticalOrbitsActive) {
+
+            var r = (this.initialOrbitRadius * (1 + this.eccentricity)) / (1 + this.eccentricity * Math.cos(Utils.degToRad(this.orbitAngle)));
+
+            this.orbitRadius = r;
+
+        } else {
+
+            this.orbitRadius = this.initialOrbitRadius;
+
+        }
 
         //CG - Translate using this radius.
         mat4.translate(scene.getMVMatrix(), scene.getMVMatrix(), [this.orbitRadius, 0, 0]);
@@ -66,23 +75,23 @@ Orbital.prototype.drawOrbital = function (isSpinEnabled) {
 
     switch (this.name) {
 
-        case "earth":
-            gl.activeTexture(gl.TEXTURE1);
-            gl.bindTexture(gl.TEXTURE_2D, this.textures["cloudsTexture"]);
-            gl.uniform1i(shaderProgram.uSampler2, 1);
+    case "earth":
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, this.textures["cloudsTexture"]);
+        gl.uniform1i(shaderProgram.uSampler2, 1);
 
-            gl.activeTexture(gl.TEXTURE2);
-            gl.bindTexture(gl.TEXTURE_2D, this.textures["earthNightTexture"]);
-            gl.uniform1i(shaderProgram.uSampler3, 2);
+        gl.activeTexture(gl.TEXTURE2);
+        gl.bindTexture(gl.TEXTURE_2D, this.textures["earthNightTexture"]);
+        gl.uniform1i(shaderProgram.uSampler3, 2);
 
-            gl.uniform1i(shaderProgram.uUseMultiTextures, true);
+        gl.uniform1i(shaderProgram.uUseMultiTextures, true);
 
-            break;
-        case "sun":
-            gl.uniform3f(shaderProgram.uAmbientColor, parseFloat(0.9), parseFloat(0.9), parseFloat(0.9));
-        default:
-            gl.uniform1i(shaderProgram.uUseMultiTextures, false);
-            break;
+        break;
+    case "sun":
+        gl.uniform3f(shaderProgram.uAmbientColor, parseFloat(0.9), parseFloat(0.9), parseFloat(0.9));
+    default:
+        gl.uniform1i(shaderProgram.uUseMultiTextures, false);
+        break;
 
     }
 
@@ -122,10 +131,17 @@ Orbital.prototype.increaseSpin = function () {
 
         var elapsed = timeNow - this.lastAnimTime;
 
-        //this.orbitAngle += (this.orbitVelocity * elapsed) / 1000.0;
+        if (Config.ellipticalOrbitsActive) {
+
+            this.orbitAngle += ((elapsed * this.initialOrbitRadius * this.initialOrbitRadius * this.orbitVelocity) / (this.orbitRadius * this.orbitRadius)) / 1000.0;
+
+        } else {
+
+            this.orbitAngle += (this.orbitVelocity * elapsed) / 1000.0;
+
+        }
 
         //CG  - Calculate the change in orbit angle, and use this to rotate an elliptical orbit using the orbit velocity.
-        this.orbitAngle += ((elapsed * this.initialOrbitRadius * this.initialOrbitRadius * this.orbitVelocity) / (this.orbitRadius * this.orbitRadius)) / 1000.0;
 
         this.spinAngle += (this.spinVelocity * elapsed) / 1000.0;
     }
