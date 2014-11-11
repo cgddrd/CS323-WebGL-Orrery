@@ -120,6 +120,9 @@ Scene.prototype.drawScene = function () {
     gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
+    //CG - Tell WebGL to use skybox fragment shader.
+    gl.useProgram(shaderProgram2);
+
     mat4.perspective(this.getPMatrix(), 45, gl.viewportWidth / gl.viewportHeight, 0.1, 2000.0);
 
     // 2 * Math.PI = 360 degrees in radians.
@@ -133,19 +136,35 @@ Scene.prototype.drawScene = function () {
 
     var lightPos = [0.0, 0.0, 0.0, 1.0];
 
+    var testMat = mat4.clone(this.getMVMatrix());
+
+    var currentPos = vec3.create();
+
+    //vec3.transformMat4(currentPos, currentPos, this.getMVMatrix());
+
+    //vec3.multiply(currentPos, currentPos, [camera.getXPosition(), camera.getYPosition(), camera.getZPosition()])
+
     // CG - Handle scene rotations (via mouse events)
     //mat4.multiply(mvMatrix, mvMatrix, camera.getRotationMatrix());
 
     // CG - Move based on the user's input.
-    mat4.translate(this.getMVMatrix(), this.getMVMatrix(), [camera.getXPosition(), camera.getYPosition(), camera.getZPosition()]);
+    mat4.translate(testMat, testMat, [camera.getXPosition(), camera.getYPosition(), camera.getZPosition()]);
 
-    vec4.transformMat4(lightPos, lightPos, this.getMVMatrix());
+    vec3.transformMat4(currentPos, currentPos, testMat);
+
+    mat4.translate(this.getMVMatrix(), this.getMVMatrix(), currentPos);
 
     // CG - Handle scene rotations (via mouse events)
     mat4.multiply(this.getMVMatrix(), this.getMVMatrix(), camera.getRotationMatrix());
 
     // CG - Handle scene zooming (via mouse wheel events)
     mat4.scale(this.getMVMatrix(), this.getMVMatrix(), [camera.getZoomFactor(), camera.getZoomFactor(), camera.getZoomFactor()]);
+
+    vec4.transformMat4(lightPos, lightPos, this.getMVMatrix());
+
+
+
+
 
     this.pushMVMatrix();
 
@@ -155,23 +174,26 @@ Scene.prototype.drawScene = function () {
 
     gl.bindTexture(gl.TEXTURE_2D, textureCreator.getTextures()["spaceTexture"]);
 
-    gl.uniform1i(shaderProgram.uSampler1, 0);
-    gl.uniform1i(shaderProgram.uUseMultiTextures, false);
+    gl.uniform1i(shaderProgram2.uSampler1, 0);
+    //gl.uniform1i(shaderProgram.uUseMultiTextures, false);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, app.buffers["cubeVertexPositionBuffer"]);
-    gl.vertexAttribPointer(shaderProgram.aVertexPosition, app.buffers["cubeVertexPositionBuffer"].itemSize, gl.FLOAT, false, 0, 0);
+    gl.vertexAttribPointer(shaderProgram2.aVertexPosition, app.buffers["cubeVertexPositionBuffer"].itemSize, gl.FLOAT, false, 0, 0);
 
     // NEW: Set-up the cube texture buffer.
     gl.bindBuffer(gl.ARRAY_BUFFER, app.buffers["cubeVertexTextureCoordBuffer"]);
-    gl.vertexAttribPointer(shaderProgram.aTextureCoord1, app.buffers["cubeVertexTextureCoordBuffer"].itemSize, gl.FLOAT, false, 0, 0);
+    gl.vertexAttribPointer(shaderProgram2.aTextureCoord1, app.buffers["cubeVertexTextureCoordBuffer"].itemSize, gl.FLOAT, false, 0, 0);
 
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, app.buffers["cubeVertexIndexBuffer"]);
 
-    this.setMatrixUniforms(shaderProgram);
+    this.setMatrixUniforms(shaderProgram2);
 
     gl.drawElements(gl.TRIANGLES, app.buffers["cubeVertexIndexBuffer"].numItems, gl.UNSIGNED_SHORT, 0);
 
     this.popMVMatrix();
+
+    //CG - Tell WebGL to switch to use "normal" planet fragment shader.
+    gl.useProgram(shaderProgram);
 
     //CG - Add lighting after we have rendered the skybox.
     if (Config.lightingActive) {
@@ -247,5 +269,4 @@ Scene.prototype.drawScene = function () {
 
     //Finally pop the top-level scene matrix.
     this.popMVMatrix();
-
 }

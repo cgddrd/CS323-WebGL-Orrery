@@ -3,9 +3,10 @@ function OrreryApp(gl) {
     this.buffers = {};
 }
 
-OrreryApp.prototype.initShaders = function (shaderAttributes, shaderUniforms) {
-    var fragmentShader = this.getShader("shader-fs");
-    var vertexShader = this.getShader("shader-vs");
+OrreryApp.prototype.initShaders = function (fragmentShaderID, vertexShaderID, shaderAttributes, shaderUniforms) {
+
+    var fragmentShader = this.getShader(fragmentShaderID);
+    var vertexShader = this.getShader(vertexShaderID);
 
     var shaderProgram = this.gl.createProgram();
     this.gl.attachShader(shaderProgram, vertexShader);

@@ -2,6 +2,7 @@ var gl;
 var textureCreator;
 var app;
 var shaderProgram;
+var shaderProgram2;
 var camera;
 var scene;
 
@@ -36,7 +37,9 @@ function webGLStart() {
 
     camera = new Camera(canvas);
 
-    shaderProgram = app.initShaders(Config.shaderAttributes, Config.shaderUniforms);
+    shaderProgram = app.initShaders("shader-fs", "shader-vs", Config.shaderAttributes, Config.shaderUniforms);
+
+    shaderProgram2 = app.initShaders("shader-fs-skybox", "shader-vs", Config.skyboxShaderAttributes, Config.skyboxShaderUniforms);
 
     app.initialiseBuffers(Config.shaderBuffers);
 

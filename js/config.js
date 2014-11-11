@@ -9,6 +9,10 @@ var Config  = {
 
     shaderUniforms: ["uPMatrix", "uMVMatrix", "uTMatrix", "uNMatrix", "uSampler1", "uSampler2", "uSampler3", "uUseLighting", "uMaterialShininess", "uUseMultiTextures", "uAmbientColor", "uPointLightingLocation", "uPointLightingSpecularColor", "uPointLightingDiffuseColor"],
 
+    skyboxShaderAttributes: ["aVertexPosition", "aTextureCoord1", "aVertexNormal"],
+
+    skyboxShaderUniforms: ["uPMatrix", "uMVMatrix", "uTMatrix", "uNMatrix", "uSampler1"],
+
     shaderBuffers: ["planetVertexPositionBuffer", "planetVertexNormalBuffer", "planetVertexTextureCoordBuffer", "planetVertexIndexBuffer", "cubeVertexIndexBuffer", "cubeVertexPositionBuffer", "cubeVertexTextureCoordBuffer", "squareVertexPositionBuffer", "squareVertexTextureCoordBuffer"],
 
     startZoom: 50,

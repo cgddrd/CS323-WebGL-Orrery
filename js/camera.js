@@ -95,10 +95,10 @@ Camera.prototype.handleMouseWheel = function(event) {
     if (delta) {
 
         if (delta > 0) {
-            this.zoom += 0.05;
+            this.zoom += 0.01;
 
         } else {
-            this.zoom -= 0.05;
+            this.zoom -= 0.01;
 
             if (this.zoom < 0.01) {
                 this.zoom = 0.1;
