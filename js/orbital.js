@@ -1,4 +1,4 @@
-function Orbital(name, textures, orbitVelocity, spinVelocity, scaleFactor, buffers, orbitRadius, eccentricity) {
+function Orbital(name, textures, orbitVelocity, spinVelocity, scaleFactor, buffers, orbitRadius, eccentricity, tilt) {
 
     this.children = [];
     this.textures = textures;
@@ -13,6 +13,7 @@ function Orbital(name, textures, orbitVelocity, spinVelocity, scaleFactor, buffe
     this.name = name;
     this.initialOrbitRadius = orbitRadius;
     this.eccentricity = eccentricity;
+    this.tilt = tilt;
 }
 
 Orbital.prototype.drawOrbital = function (isSpinEnabled) {
@@ -24,9 +25,15 @@ Orbital.prototype.drawOrbital = function (isSpinEnabled) {
         this.increaseSpin();
     }
 
+    if (this.tilt > 0) {
+        mat4.rotate(scene.getMVMatrix(), scene.getMVMatrix(), Utils.degToRad(this.tilt), [0, 0, 1]);
+    }
+
     if (this.orbitVelocity > 0) {
         mat4.rotate(scene.getMVMatrix(), scene.getMVMatrix(), Utils.degToRad(this.orbitAngle), [0, 1, 0]);
     }
+
+
 
     if (this.initialOrbitRadius != 0) {
 

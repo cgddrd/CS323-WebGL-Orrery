@@ -5,6 +5,7 @@ var shaderProgram;
 var shaderProgram2;
 var camera;
 var scene;
+var eventManager;
 
 function initGL(canvas) {
 
@@ -23,7 +24,7 @@ function initGL(canvas) {
 
 function tick() {
     requestAnimFrame(tick);
-    camera.handleKeys();
+    eventManager.handleKeys();
     scene.drawScene();
 }
 
@@ -35,7 +36,11 @@ function webGLStart() {
 
     app = new OrreryApp(gl);
 
-    camera = new Camera(canvas);
+    scene = new Scene(gl);
+
+    camera = new Camera();
+
+    eventManager = new EventManager(canvas);
 
     shaderProgram = app.initShaders("shader-fs", "shader-vs", Config.shaderAttributes, Config.shaderUniforms);
 
@@ -44,8 +49,6 @@ function webGLStart() {
     app.initialiseBuffers(Config.shaderBuffers);
 
     textureCreator = new TextureCreator(Config.textureNames, Config.textureImages);
-
-    scene = new Scene(gl);
 
     scene.setupScene();
 

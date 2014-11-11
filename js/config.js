@@ -17,6 +17,8 @@ var Config  = {
 
     startZoom: 50,
 
+    spinActive: true,
+
     lightingActive: true,
 
     ellipticalOrbitsActive: true,
@@ -30,6 +32,8 @@ var Config  = {
     specularMaterialShineLevel: 10,
 
     cloudRotationSpeed: 0.1,
+
+    cameraAxisRotation: false,
 
     scenePlanets: [
 
@@ -50,7 +54,7 @@ var Config  = {
             spinVelocity: 40,
             scaleFactor: 0.3,
             orbitVelocity: 120,
-            orbitRadius: -20,
+            orbitRadius: -10,
             orbitEccentricity: 0.5
 
         },
@@ -60,7 +64,7 @@ var Config  = {
             spinVelocity: 35,
             scaleFactor: 0.5,
             orbitVelocity: 110,
-            orbitRadius: -40,
+            orbitRadius: -30,
             orbitEccentricity: 0.5
 
         },
@@ -70,7 +74,7 @@ var Config  = {
             spinVelocity: 30,
             scaleFactor: 0,
             orbitVelocity: 100,
-            orbitRadius: -60,
+            orbitRadius: -50,
             orbitEccentricity: 0.5,
             children: ["moon"]
 
@@ -82,7 +86,8 @@ var Config  = {
             scaleFactor: 0.2,
             orbitVelocity: 1000,
             orbitRadius: -5,
-            orbitEccentricity: 0.5
+            orbitEccentricity: 0.5,
+            tilt: 45
 
         },
 
@@ -91,7 +96,7 @@ var Config  = {
             spinVelocity: 30,
             scaleFactor: 0,
             orbitVelocity: 90,
-            orbitRadius: -80,
+            orbitRadius: -70,
             orbitEccentricity: 0.5
 
         },
@@ -111,7 +116,7 @@ var Config  = {
             spinVelocity: 10,
             scaleFactor: 1.8,
             orbitVelocity: 40,
-            orbitRadius: -130,
+            orbitRadius: -120,
             orbitEccentricity: 0.5
 
         },
@@ -121,7 +126,7 @@ var Config  = {
             spinVelocity: 15,
             scaleFactor: 1.5,
             orbitVelocity: 20,
-            orbitRadius: -170,
+            orbitRadius: -160,
             orbitEccentricity: 0.5
 
         },
@@ -131,7 +136,7 @@ var Config  = {
             spinVelocity: 15,
             scaleFactor: 1.3,
             orbitVelocity: 10,
-            orbitRadius: -190,
+            orbitRadius: -180,
             orbitEccentricity: 0.5
 
         }

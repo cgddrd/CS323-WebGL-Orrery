@@ -1,11 +1,9 @@
 function Camera(canvas) {
 
-    this.currentlyPressedKeys = {};
-    this.enableSpin = true;
-    this.mouseDown = false;
     this.lastMouseX = 0;
     this.lastMouseY = 0;
     this.zoom = 1.0;
+    this.position = vec3.create();
 
     //CG - Ensure Z value is negative at the start.
     this.z = (0 - Config.startZoom);
@@ -13,59 +11,19 @@ function Camera(canvas) {
     this.y = 0;
     this.cameraRotationMatrix = mat4.create();
 
-    this.init(canvas);
-
 }
 
-Camera.prototype.init = function(canvas) {
-
-    canvas.onmousedown = this.handleMouseDown.bind(this);
-    document.onmouseup = this.handleMouseUp.bind(this);
-    document.onmousemove = this.handleMouseMove.bind(this);
-    window.onmousewheel = document.onmousewheel = this.handleMouseWheel.bind(this);
-    document.onkeydown = this.handleKeyDown.bind(this);
-    document.onkeyup = this.handleKeyUp.bind(this);
-
+Camera.prototype.handleMouseCoords = function(mouseX, mouseY) {
+    this.lastMouseX = mouseX;
+    this.lastMouseY = mouseY;
 }
 
-Camera.prototype.handleKeyDown = function(event) {
+Camera.prototype.handleRotation = function(newX, newY) {
 
-    this.currentlyPressedKeys[event.keyCode] = true;
+    var deltaX = newX - this.lastMouseX;
 
-    if (String.fromCharCode(event.keyCode) == "S" && this.enableSpin == true) {
-        this.enableSpin = false;
-    } else if (String.fromCharCode(event.keyCode) == "S" && this.enableSpin == false) {
-        this.enableSpin = true;
-    }
-}
-
-Camera.prototype.handleKeyUp = function(event) {
-    this.currentlyPressedKeys[event.keyCode] = false;
-}
-
-Camera.prototype.handleMouseDown = function(event) {
-    this.mouseDown = true;
-    this.lastMouseX = event.clientX;
-    this.lastMouseY = event.clientY;
-}
-
-
-Camera.prototype.handleMouseUp = function(event) {
-    this.mouseDown = false;
-}
-
-
-Camera.prototype.handleMouseMove = function(event) {
-
-    if (!this.mouseDown) {
-        return;
-    }
-
-    var newX = event.clientX;
-    var newY = event.clientY;
-
-    var deltaX = newX - this.lastMouseX
     var newRotationMatrix = mat4.create();
+
     mat4.identity(newRotationMatrix);
     mat4.rotate(newRotationMatrix, newRotationMatrix, Utils.degToRad(deltaX / 10), [0, 1, 0]);
 
@@ -78,19 +36,7 @@ Camera.prototype.handleMouseMove = function(event) {
     this.lastMouseY = newY;
 }
 
-Camera.prototype.handleMouseWheel = function(event) {
-
-    var delta = 0;
-
-    if (!event) {
-        event = window.event;
-    }
-
-    if (event.wheelDelta) {
-        delta = event.wheelDelta / 120;
-    } else if (event.detail) {
-        delta = -event.detail / 3;
-    }
+Camera.prototype.handleZoom = function(delta) {
 
     if (delta) {
 
@@ -108,33 +54,6 @@ Camera.prototype.handleMouseWheel = function(event) {
 
 }
 
-Camera.prototype.handleKeys = function() {
-    if (this.currentlyPressedKeys[69]) {
-        // E
-        this.z -= 0.5;
-    }
-    if (this.currentlyPressedKeys[87]) {
-        // W
-        this.z += 0.5;
-    }
-    if (this.currentlyPressedKeys[37]) {
-        // Left cursor key
-        this.x += 0.5;
-    }
-    if (this.currentlyPressedKeys[39]) {
-        // Right cursor key
-        this.x -= 0.5;
-    }
-    if (this.currentlyPressedKeys[38]) {
-        // Up cursor key
-        this.y -= 0.5;
-    }
-    if (this.currentlyPressedKeys[40]) {
-        // Down cursor key
-        this.y += 0.5;
-    }
-}
-
 Camera.prototype.getZoomFactor = function() {
     return this.zoom;
 }
@@ -149,6 +68,18 @@ Camera.prototype.getYPosition = function() {
 
 Camera.prototype.getZPosition = function() {
     return this.z;
+}
+
+Camera.prototype.setXPosition = function(x) {
+    this.x = x;
+}
+
+Camera.prototype.setYPosition = function(y) {
+    this.y = y;
+}
+
+Camera.prototype.setZPosition = function(z) {
+    this.z = z;
 }
 
 Camera.prototype.getRotationMatrix = function() {
