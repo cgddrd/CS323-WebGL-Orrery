@@ -1,6 +1,9 @@
-function EventManager(canvas) {
+function EventManager(canvas, camera) {
+
     this.currentlyPressedKeys = {};
     this.mouseDown = false;
+    this.camera = camera;
+
     this.init(canvas);
 }
 
@@ -25,7 +28,7 @@ EventManager.prototype.handleKeyDown = function(event) {
     }
 
     if (String.fromCharCode(event.keyCode) == "G") {
-        camera.goHome();
+        this.camera.goHome();
     }
 }
 
@@ -39,12 +42,12 @@ EventManager.prototype.handleMouseMove = function(event) {
         return;
     }
 
-    camera.handleRotation(event.clientX, event.clientY)
+    this.camera.handleRotation(event.clientX, event.clientY)
 }
 
 EventManager.prototype.handleMouseDown = function(event) {
     this.mouseDown = true;
-    camera.handleMouseCoords(event.clientX, event.clientY);
+    this.camera.handleMouseCoords(event.clientX, event.clientY);
 }
 
 EventManager.prototype.handleMouseUp = function(event) {
@@ -65,7 +68,7 @@ EventManager.prototype.handleMouseWheel = function(event) {
         delta = -event.detail / 3;
     }
 
-    camera.handleZoom(delta);
+    this.camera.handleZoom(delta);
 
 }
 
@@ -73,26 +76,26 @@ EventManager.prototype.handleKeys = function() {
 
     if (this.currentlyPressedKeys[69]) {
         // E
-        camera.setZPosition(camera.getZPosition() -= 0.5);
+        this.camera.setZPosition(this.camera.getZPosition() -= 0.5);
     }
     if (this.currentlyPressedKeys[87]) {
         // W
-        camera.setZPosition(camera.getZPosition() += 0.5);
+        this.camera.setZPosition(this.camera.getZPosition() += 0.5);
     }
     if (this.currentlyPressedKeys[37]) {
         // Left cursor key
-        camera.setXPosition(camera.getXPosition() += 0.5);
+        this.camera.setXPosition(this.camera.getXPosition() += 0.5);
     }
     if (this.currentlyPressedKeys[39]) {
         // Right cursor key
-        camera.setXPosition(camera.getXPosition() -= 0.5);
+        this.camera.setXPosition(this.camera.getXPosition() -= 0.5);
     }
     if (this.currentlyPressedKeys[38]) {
         // Up cursor key
-        camera.setYPosition(camera.getYPosition() -= 0.5);
+        this.camera.setYPosition(this.camera.getYPosition() -= 0.5);
     }
     if (this.currentlyPressedKeys[40]) {
         // Down cursor key
-        camera.setYPosition(camera.getYPosition() += 0.5);
+        this.camera.setYPosition(this.camera.getYPosition() += 0.5);
     }
 }

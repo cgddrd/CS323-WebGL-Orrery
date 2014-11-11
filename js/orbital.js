@@ -16,7 +16,7 @@ function Orbital(name, textures, orbitVelocity, spinVelocity, scaleFactor, buffe
     this.tilt = tilt;
 }
 
-Orbital.prototype.drawOrbital = function (isSpinEnabled) {
+Orbital.prototype.drawOrbital = function (isSpinEnabled, gl, shaderProgram, scene) {
 
     //Push matrix for planet orbit.
     scene.pushMVMatrix();
@@ -32,8 +32,6 @@ Orbital.prototype.drawOrbital = function (isSpinEnabled) {
     if (this.orbitVelocity > 0) {
         mat4.rotate(scene.getMVMatrix(), scene.getMVMatrix(), Utils.degToRad(this.orbitAngle), [0, 1, 0]);
     }
-
-
 
     if (this.initialOrbitRadius != 0) {
 
@@ -64,7 +62,7 @@ Orbital.prototype.drawOrbital = function (isSpinEnabled) {
         //Recursive function to draw child orbitals.
         for (var i = 0; i < this.children.length; i++) {
             var currentOrbital = this.children[i];
-            currentOrbital.drawOrbital(isSpinEnabled);
+            currentOrbital.drawOrbital(isSpinEnabled, gl, shaderProgram, scene);
         }
 
     }

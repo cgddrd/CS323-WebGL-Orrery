@@ -1,6 +1,62 @@
-function OrreryApp(gl) {
-    this.gl = gl;
+function OrreryApp(canvas) {
+    this.gl;
     this.buffers = {};
+    this.scene;
+    this.camera;
+    this.eventManager;
+    this.shaderProgram;
+    this.shaderProgram2;
+    this.textureCreator;
+    this.canvas = canvas;
+}
+
+OrreryApp.prototype.init = function() {
+
+    this.initGL(this.canvas);
+
+    this.initialiseBuffers(Config.shaderBuffers);
+
+    this.textureCreator = new TextureCreator(Config.textureNames, Config.textureImages, this.gl);
+
+    this.camera = new Camera();
+
+    this.eventManager = new EventManager(this.canvas, this.camera);
+
+    this.shaderProgram = this.initShaders("shader-fs", "shader-vs", Config.shaderAttributes, Config.shaderUniforms);
+
+    this.shaderProgram2 = this.initShaders("shader-fs-skybox", "shader-vs", Config.skyboxShaderAttributes, Config.skyboxShaderUniforms);
+
+    this.scene = new Scene(this.gl, this.shaderProgram, this.shaderProgram2, this.camera, this.textureCreator);
+
+    this.scene.setupScene(this);
+
+    this.gl.clearColor(0.0, 0.0, 0.0, 1.0);
+    this.gl.enable(this.gl.DEPTH_TEST);
+
+    this.tick();
+}
+
+OrreryApp.prototype.tick = function() {
+    requestAnimFrame(this.tick.bind(this));
+    this.eventManager.handleKeys();
+    this.scene.drawScene(this);
+}
+
+OrreryApp.prototype.initGL = function(canvas) {
+
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    try {
+        this.gl = canvas.getContext("experimental-webgl");
+        this.gl.viewportWidth = canvas.width;
+        this.gl.viewportHeight = canvas.height;
+
+    } catch (e) {}
+
+    if (!this.gl) {
+        alert("Could not initialise WebGL, sorry :-(");
+    }
 }
 
 OrreryApp.prototype.initShaders = function (fragmentShaderID, vertexShaderID, shaderAttributes, shaderUniforms) {
@@ -131,32 +187,32 @@ OrreryApp.prototype.initialiseBuffers = function (shaderBuffers) {
         }
     }
 
-    this.buffers["planetVertexNormalBuffer"] = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers["planetVertexNormalBuffer"]);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(normalData), gl.STATIC_DRAW);
+    this.buffers["planetVertexNormalBuffer"] = this.gl.createBuffer();
+    this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.buffers["planetVertexNormalBuffer"]);
+    this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(normalData), this.gl.STATIC_DRAW);
     this.buffers["planetVertexNormalBuffer"].itemSize = 3;
     this.buffers["planetVertexNormalBuffer"].numItems = normalData.length / 3;
 
-    this.buffers["planetVertexTextureCoordBuffer"] = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers["planetVertexTextureCoordBuffer"]);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(textureCoordData), gl.STATIC_DRAW);
+    this.buffers["planetVertexTextureCoordBuffer"] = this.gl.createBuffer();
+    this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.buffers["planetVertexTextureCoordBuffer"]);
+    this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(textureCoordData), this.gl.STATIC_DRAW);
     this.buffers["planetVertexTextureCoordBuffer"].itemSize = 2;
     this.buffers["planetVertexTextureCoordBuffer"].numItems = textureCoordData.length / 2;
 
-    this.buffers["planetVertexPositionBuffer"] = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers["planetVertexPositionBuffer"]);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexPositionData), gl.STATIC_DRAW);
+    this.buffers["planetVertexPositionBuffer"] = this.gl.createBuffer();
+    this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.buffers["planetVertexPositionBuffer"]);
+    this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(vertexPositionData), this.gl.STATIC_DRAW);
     this.buffers["planetVertexPositionBuffer"].itemSize = 3;
     this.buffers["planetVertexPositionBuffer"].numItems = vertexPositionData.length / 3;
 
-    this.buffers["planetVertexIndexBuffer"] = gl.createBuffer();
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.buffers["planetVertexIndexBuffer"]);
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indexData), gl.STREAM_DRAW);
+    this.buffers["planetVertexIndexBuffer"] = this.gl.createBuffer();
+    this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.buffers["planetVertexIndexBuffer"]);
+    this.gl.bufferData(this.gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indexData), this.gl.STREAM_DRAW);
     this.buffers["planetVertexIndexBuffer"].itemSize = 1;
     this.buffers["planetVertexIndexBuffer"].numItems = indexData.length;
 
-    this.buffers["cubeVertexPositionBuffer"] = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers["cubeVertexPositionBuffer"]);
+    this.buffers["cubeVertexPositionBuffer"] = this.gl.createBuffer();
+    this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.buffers["cubeVertexPositionBuffer"]);
     vertices = [
       // Front face
       -1.0, -1.0, 1.0,
@@ -194,14 +250,14 @@ OrreryApp.prototype.initialiseBuffers = function (shaderBuffers) {
       -1.0, 1.0, 1.0,
       -1.0, 1.0, -1.0
     ];
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+    this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(vertices), this.gl.STATIC_DRAW);
     this.buffers["cubeVertexPositionBuffer"].itemSize = 3;
     this.buffers["cubeVertexPositionBuffer"].numItems = 24;
 
     // -- SET cube TEXTURES --
 
-    this.buffers["cubeVertexTextureCoordBuffer"] = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers["cubeVertexTextureCoordBuffer"]);
+    this.buffers["cubeVertexTextureCoordBuffer"] = this.gl.createBuffer();
+    this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.buffers["cubeVertexTextureCoordBuffer"]);
     var textureCoords = [
       // Front face
       0.0, 0.0,
@@ -239,14 +295,14 @@ OrreryApp.prototype.initialiseBuffers = function (shaderBuffers) {
       1.0, 1.0,
       0.0, 1.0
     ];
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(textureCoords), gl.STATIC_DRAW);
+    this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(textureCoords), this.gl.STATIC_DRAW);
     this.buffers["cubeVertexTextureCoordBuffer"].itemSize = 2;
     this.buffers["cubeVertexTextureCoordBuffer"].numItems = 24;
 
     // -- SET CUBE VERTICES INDEX BUFFER --
 
-    this.buffers["cubeVertexIndexBuffer"] = gl.createBuffer();
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.buffers["cubeVertexIndexBuffer"]);
+    this.buffers["cubeVertexIndexBuffer"] = this.gl.createBuffer();
+    this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.buffers["cubeVertexIndexBuffer"]);
 
     var cubeVertexIndices = [
       0, 1, 2, 0, 2, 3, // Front face
@@ -257,30 +313,30 @@ OrreryApp.prototype.initialiseBuffers = function (shaderBuffers) {
       20, 21, 22, 20, 22, 23 // Left face
     ]
 
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(cubeVertexIndices), gl.STATIC_DRAW);
+    this.gl.bufferData(this.gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(cubeVertexIndices), this.gl.STATIC_DRAW);
     this.buffers["cubeVertexIndexBuffer"].itemSize = 1;
     this.buffers["cubeVertexIndexBuffer"].numItems = 36;
 
-    this.buffers["squareVertexPositionBuffer"] = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers["squareVertexPositionBuffer"]);
+    this.buffers["squareVertexPositionBuffer"] = this.gl.createBuffer();
+    this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.buffers["squareVertexPositionBuffer"]);
     vertices = [
          1.0, 1.0, 0.0,
         -1.0, 1.0, 0.0,
          1.0, -1.0, 0.0,
         -1.0, -1.0, 0.0
     ];
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+    this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(vertices), this.gl.STATIC_DRAW);
     this.buffers["squareVertexPositionBuffer"].itemSize = 3;
     this.buffers["squareVertexPositionBuffer"].numItems = 4;
 
-    this.buffers["squareVertexTextureCoordBuffer"] = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers["squareVertexTextureCoordBuffer"]);
+    this.buffers["squareVertexTextureCoordBuffer"] = this.gl.createBuffer();
+    this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.buffers["squareVertexTextureCoordBuffer"]);
 
     texvert = [1.0, 0.0,
               0.0, 0.0,
               1.0, 1.0,
               0.0, 1.0];
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(texvert), gl.STATIC_DRAW);
+    this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(texvert), this.gl.STATIC_DRAW);
 
     this.buffers["squareVertexTextureCoordBuffer"].itemSize = 2;
     this.buffers["squareVertexTextureCoordBuffer"].numItems = 4;
@@ -289,4 +345,8 @@ OrreryApp.prototype.initialiseBuffers = function (shaderBuffers) {
 
 OrreryApp.prototype.getBuffers = function() {
     return this.buffers;
+}
+
+OrreryApp.prototype.getGL = function() {
+    return this.gl;
 }

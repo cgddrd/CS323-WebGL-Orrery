@@ -52,8 +52,12 @@
         vec4 nightColor = texture2D(uSampler3, vec2(vTextureCoord1.s, vTextureCoord1.t));
         vec4 cloudColor = texture2D(uSampler2, vec2(vTextureCoord2.s, vTextureCoord2.t));
 
-        highp float d = length(uPointLightingLocation.xyz - vPosition.xyz);
-        highp float attenuation = min((1.0/(0.0001 + (0.0001 * d) + (0.0001 * (d*d)))), 1.0);
+        float d = length(uPointLightingLocation.xyz - vPosition.xyz);
+        float attenuation = min((1.0/(0.0001 + (0.0001 * d) + (0.0001 * (d*d)))), 1.0);
+
+
+        //CG - Cheap hack to prevent the attenuation going weird when we zoom (scale) in and out.
+        attenuation = clamp(attenuation, 0.5, 0.8);
 
         float specularLightWeighting = 0.0;
 
@@ -68,8 +72,6 @@
         float diffuseLightWeighting = max(dot(normalize(normal), lightDirection), 0.0);
 
         diffuseLightWeighting = clamp(diffuseLightWeighting * diffusePower, -1.0, 1.0);
-
-        //float mixAmount = diffuseLightWeighting * 0.2 + 0.2;
 
         vec3 color = mix(nightColor.rgb, dayColor.rgb, diffuseLightWeighting);
 

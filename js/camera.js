@@ -1,9 +1,8 @@
-function Camera(canvas) {
+function Camera() {
 
     this.lastMouseX = 0;
     this.lastMouseY = 0;
     this.zoom = 1.0;
-    this.position = vec3.create();
 
     //CG - Ensure Z value is negative at the start.
     this.z = (0 - Config.startZoom);
@@ -84,8 +83,4 @@ Camera.prototype.setZPosition = function(z) {
 
 Camera.prototype.getRotationMatrix = function() {
     return this.cameraRotationMatrix;
-}
-
-Camera.prototype.isSpinEnabled = function() {
-    return this.enableSpin;
 }

@@ -1,4 +1,4 @@
-function Scene(gl) {
+function Scene(gl, shaderProgram1, shaderProgram2, camera, textureCreator) {
 
     this.mvMatrix = mat4.create();
     this.pMatrix = mat4.create();
@@ -8,16 +8,22 @@ function Scene(gl) {
     this.lastMatrixStack = [];
 
     this.gl = gl;
+    this.shaderProgram = shaderProgram1;
+    this.shaderProgram2 = shaderProgram2
+    this.camera = camera;
+    this.textureCreator = textureCreator;
 
     this.sceneObjects = [];
 
     this.rootSceneObject = null;
 }
 
-Scene.prototype.setupScene = function () {
+Scene.prototype.setupScene = function (app) {
 
     var currentPlanet, parentPlanet;
     var parentPlanets = [];
+
+    var textureCreator = this.textureCreator;
 
     for (var planet in Config.scenePlanets) {
 
@@ -80,7 +86,7 @@ Scene.prototype.setMatrixUniforms = function (shaderProgram) {
 
     mat3.normalFromMat4(normalMatrix, this.mvMatrix);
 
-    gl.uniformMatrix3fv(shaderProgram.uNMatrix, false, normalMatrix);
+    this.gl.uniformMatrix3fv(shaderProgram.uNMatrix, false, normalMatrix);
 }
 
 Scene.prototype.setMVMatrix = function(mvMatrix) {
@@ -121,7 +127,13 @@ Scene.prototype.getRootSceneObject = function () {
     return this.rootSceneObject;
 }
 
-Scene.prototype.drawScene = function () {
+Scene.prototype.drawScene = function (app) {
+
+    var gl = this.gl;
+    var shaderProgram = this.shaderProgram;
+    var shaderProgram2 = this.shaderProgram2;
+    var camera = this.camera;
+    var textureCreator = this.textureCreator;
 
     gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -173,9 +185,6 @@ Scene.prototype.drawScene = function () {
         mat4.multiply(this.getMVMatrix(), this.getMVMatrix(), camera.getRotationMatrix());
 
     }
-
-    // CG - Handle scene zooming (via mouse wheel events)
-    mat4.scale(this.getMVMatrix(), this.getMVMatrix(), [camera.getZoomFactor(), camera.getZoomFactor(), camera.getZoomFactor()]);
 
     vec4.transformMat4(lightPos, lightPos, this.getMVMatrix());
 
@@ -248,8 +257,11 @@ Scene.prototype.drawScene = function () {
     // CG - Push a new matrix for the scene.
     this.pushMVMatrix();
 
+        // CG - Handle scene zooming (via mouse wheel events)
+    mat4.scale(this.getMVMatrix(), this.getMVMatrix(), [camera.getZoomFactor(), camera.getZoomFactor(), camera.getZoomFactor()]);
+
     // CG - Kick off the rendering (start from the Sun and work our way down the tree).
-    this.getRootSceneObject().drawOrbital(Config.spinActive);
+    this.getRootSceneObject().drawOrbital(Config.spinActive, gl, shaderProgram, this);
 
     //Pop the matrix saved from earlier in order to render out the saturn ring last.
     this.setMVMatrix(this.getLastMatrixStack().pop());

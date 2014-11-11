@@ -1,12 +1,12 @@
-function TextureCreator(textureNames, textureImages) {
+function TextureCreator(textureNames, textureImages, gl) {
 
     this.textureNames = textureNames;
     this.textureImages = textureImages;
-    this.textureCollection = this.initialiseTextures();
+    this.textureCollection = this.initialiseTextures(gl);
 
 }
 
-TextureCreator.prototype.initialiseTextures = function () {
+TextureCreator.prototype.initialiseTextures = function (gl) {
 
     var textures = {};
 
@@ -18,7 +18,7 @@ TextureCreator.prototype.initialiseTextures = function () {
 
         textures[this.textureNames[i]].image.onload = (function (value, scope, texturearray) {
             return function () {
-                scope.handleLoadedTexture(texturearray[scope.textureNames[value]]);
+                scope.handleLoadedTexture(texturearray[scope.textureNames[value]], gl);
             }
         })(i, this, textures);
 
@@ -30,7 +30,8 @@ TextureCreator.prototype.initialiseTextures = function () {
 
 }
 
-TextureCreator.prototype.handleLoadedTexture = function(texture) {
+TextureCreator.prototype.handleLoadedTexture = function(texture, gl) {
+
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
     gl.bindTexture(gl.TEXTURE_2D, texture);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, texture.image);
