@@ -1,10 +1,10 @@
-function EventManager(canvas, camera) {
+function EventManager() {
 
     this.currentlyPressedKeys = {};
     this.mouseDown = false;
-    this.camera = camera;
+    this.camera = app.getCamera();
 
-    this.init(canvas);
+    this.init(app.getCanvas());
 }
 
 EventManager.prototype.init = function(canvas) {

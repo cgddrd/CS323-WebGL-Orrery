@@ -1,8 +1,8 @@
-function TextureCreator(textureNames, textureImages, gl) {
+function TextureCreator(textureNames, textureImages) {
 
     this.textureNames = textureNames;
     this.textureImages = textureImages;
-    this.textureCollection = this.initialiseTextures(gl);
+    this.textureCollection = this.initialiseTextures(app.getGL());
 
 }
 

@@ -111,7 +111,7 @@ Orbital.prototype.drawOrbital = function (isSpinEnabled, gl, shaderProgram, scen
 
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.buffers["planetVertexIndexBuffer"]);
 
-    scene.setMatrixUniforms(shaderProgram);
+    scene.setMatrixUniforms(gl, shaderProgram);
 
     gl.drawElements(gl.TRIANGLES, this.buffers["planetVertexIndexBuffer"].numItems, gl.UNSIGNED_SHORT, 0);
 

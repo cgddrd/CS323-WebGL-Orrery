@@ -1,4 +1,4 @@
-function Scene(gl, shaderProgram1, shaderProgram2, camera, textureCreator) {
+function Scene() {
 
     this.mvMatrix = mat4.create();
     this.pMatrix = mat4.create();
@@ -6,12 +6,6 @@ function Scene(gl, shaderProgram1, shaderProgram2, camera, textureCreator) {
 
     this.mvMatrixStack = [];
     this.lastMatrixStack = [];
-
-    this.gl = gl;
-    this.shaderProgram = shaderProgram1;
-    this.shaderProgram2 = shaderProgram2
-    this.camera = camera;
-    this.textureCreator = textureCreator;
 
     this.sceneObjects = [];
 
@@ -23,7 +17,7 @@ Scene.prototype.setupScene = function (app) {
     var currentPlanet, parentPlanet;
     var parentPlanets = [];
 
-    var textureCreator = this.textureCreator;
+    var textureCreator = app.getTextureCreator();
 
     for (var planet in Config.scenePlanets) {
 
@@ -77,21 +71,20 @@ Scene.prototype.popMVMatrix = function () {
     this.mvMatrix = this.mvMatrixStack.pop();
 }
 
-Scene.prototype.setMatrixUniforms = function (shaderProgram) {
-    this.gl.uniformMatrix4fv(shaderProgram.uPMatrix, false, this.pMatrix);
-    this.gl.uniformMatrix4fv(shaderProgram.uMVMatrix, false, this.mvMatrix);
-    this.gl.uniformMatrix4fv(shaderProgram.uTMatrix, false, this.tMatrix);
+Scene.prototype.setMatrixUniforms = function (gl, shaderProgram) {
+
+    gl.uniformMatrix4fv(shaderProgram.uPMatrix, false, this.pMatrix);
+    gl.uniformMatrix4fv(shaderProgram.uMVMatrix, false, this.mvMatrix);
+    gl.uniformMatrix4fv(shaderProgram.uTMatrix, false, this.tMatrix);
 
     var normalMatrix = mat3.create();
 
     mat3.normalFromMat4(normalMatrix, this.mvMatrix);
 
-    this.gl.uniformMatrix3fv(shaderProgram.uNMatrix, false, normalMatrix);
+    gl.uniformMatrix3fv(shaderProgram.uNMatrix, false, normalMatrix);
 }
 
 Scene.prototype.setMVMatrix = function(mvMatrix) {
-  //  this.mvMatrix = mvMatrix;
-
     mat4.copy(this.mvMatrix, mvMatrix);
 }
 
@@ -127,13 +120,14 @@ Scene.prototype.getRootSceneObject = function () {
     return this.rootSceneObject;
 }
 
-Scene.prototype.drawScene = function (app) {
+Scene.prototype.drawScene = function () {
 
-    var gl = this.gl;
-    var shaderProgram = this.shaderProgram;
-    var shaderProgram2 = this.shaderProgram2;
-    var camera = this.camera;
-    var textureCreator = this.textureCreator;
+    var gl = app.getGL();
+
+    var shaderProgram = app.getShaderProgram();
+    var shaderProgram2 = app.getShaderProgram2();
+    var camera = app.getCamera();
+    var textureCreator = app.getTextureCreator();
 
     gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -208,7 +202,7 @@ Scene.prototype.drawScene = function (app) {
 
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, app.buffers["cubeVertexIndexBuffer"]);
 
-    this.setMatrixUniforms(shaderProgram2);
+    this.setMatrixUniforms(gl, shaderProgram2);
 
     gl.drawElements(gl.TRIANGLES, app.buffers["cubeVertexIndexBuffer"].numItems, gl.UNSIGNED_SHORT, 0);
 
@@ -287,7 +281,8 @@ Scene.prototype.drawScene = function (app) {
 
     gl.uniform1i(shaderProgram.uSampler1, 0);
 
-    this.setMatrixUniforms(shaderProgram);
+    this.setMatrixUniforms(gl, shaderProgram);
+
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, app.buffers["squareVertexPositionBuffer"].numItems);
 
     gl.disable(gl.BLEND);

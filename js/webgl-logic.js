@@ -7,10 +7,12 @@ var camera;
 var scene;
 var eventManager; */
 
+var app;
+
 function webGLStart() {
     var canvas = document.getElementById("lesson12-canvas");
 
-    var app = new OrreryApp(canvas);
+    app = new OrreryApp(canvas);
 
     app.init();
 }

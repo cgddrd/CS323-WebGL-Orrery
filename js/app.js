@@ -16,17 +16,17 @@ OrreryApp.prototype.init = function() {
 
     this.initialiseBuffers(Config.shaderBuffers);
 
-    this.textureCreator = new TextureCreator(Config.textureNames, Config.textureImages, this.gl);
+    this.textureCreator = new TextureCreator(Config.textureNames, Config.textureImages);
 
     this.camera = new Camera();
 
-    this.eventManager = new EventManager(this.canvas, this.camera);
+    this.eventManager = new EventManager();
 
     this.shaderProgram = this.initShaders("shader-fs", "shader-vs", Config.shaderAttributes, Config.shaderUniforms);
 
     this.shaderProgram2 = this.initShaders("shader-fs-skybox", "shader-vs", Config.skyboxShaderAttributes, Config.skyboxShaderUniforms);
 
-    this.scene = new Scene(this.gl, this.shaderProgram, this.shaderProgram2, this.camera, this.textureCreator);
+    this.scene = new Scene();
 
     this.scene.setupScene(this);
 
@@ -349,4 +349,36 @@ OrreryApp.prototype.getBuffers = function() {
 
 OrreryApp.prototype.getGL = function() {
     return this.gl;
+}
+
+OrreryApp.prototype.getCamera = function() {
+    return this.camera;
+}
+
+OrreryApp.prototype.getShaderProgram = function() {
+    return this.shaderProgram;
+}
+
+OrreryApp.prototype.getShaderProgram2 = function() {
+    return this.shaderProgram2;
+}
+
+OrreryApp.prototype.getScene = function() {
+    return this.scene;
+}
+
+OrreryApp.prototype.getTextureCreator = function() {
+    return this.textureCreator;
+}
+
+OrreryApp.prototype.getEventManager = function() {
+    return this.eventManager;
+}
+
+OrreryApp.prototype.getTextureCreator = function() {
+    return this.textureCreator;
+}
+
+OrreryApp.prototype.getCanvas = function() {
+    return this.canvas;
 }
