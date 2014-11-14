@@ -18,6 +18,8 @@ function Orbital(name, textures, orbitVelocity, spinVelocity, scaleFactor, buffe
 
 Orbital.prototype.drawOrbital = function (isSpinEnabled, gl, shaderProgram, scene) {
 
+    this.eccentricity = Config.currentOrbitEccentricity;
+
     //Push matrix for planet orbit.
     scene.pushMVMatrix();
 
@@ -25,7 +27,7 @@ Orbital.prototype.drawOrbital = function (isSpinEnabled, gl, shaderProgram, scen
         this.increaseSpin();
     }
 
-    if (this.tilt > 0) {
+    if (this.tilt > 0 && Config.ellipticalOrbitsActive) {
         mat4.rotate(scene.getMVMatrix(), scene.getMVMatrix(), Utils.degToRad(this.tilt), [0, 0, 1]);
     }
 
@@ -37,17 +39,7 @@ Orbital.prototype.drawOrbital = function (isSpinEnabled, gl, shaderProgram, scen
 
         //CG - Calculate the change in the radius (used for the translation).
 
-        if (Config.ellipticalOrbitsActive) {
-
-            var r = (this.initialOrbitRadius * (1 + this.eccentricity)) / (1 + this.eccentricity * Math.cos(Utils.degToRad(this.orbitAngle)));
-
-            this.orbitRadius = r;
-
-        } else {
-
-            this.orbitRadius = this.initialOrbitRadius;
-
-        }
+        this.orbitRadius = Config.ellipticalOrbitsActive ? ((this.initialOrbitRadius * (1 + this.eccentricity)) / (1 + this.eccentricity * Math.cos(Utils.degToRad(this.orbitAngle)))) * Config.scaleFactor : ((this.initialOrbitRadius * (1 + 0)) / (1 + 0 * Math.cos(Utils.degToRad(this.orbitAngle)))) * Config.scaleFactor;
 
         //CG - Translate using this radius.
         mat4.translate(scene.getMVMatrix(), scene.getMVMatrix(), [this.orbitRadius, 0, 0]);
@@ -66,7 +58,6 @@ Orbital.prototype.drawOrbital = function (isSpinEnabled, gl, shaderProgram, scen
         }
 
     }
-
 
     mat4.rotate(scene.getMVMatrix(), scene.getMVMatrix(), Utils.degToRad(this.spinAngle), [0, 1, 0]);
 
@@ -90,7 +81,6 @@ Orbital.prototype.drawOrbital = function (isSpinEnabled, gl, shaderProgram, scen
         gl.uniform1i(shaderProgram.uSampler3, 2);
 
         gl.uniform1i(shaderProgram.uUseMultiTextures, true);
-
         break;
     case "sun":
         gl.uniform3f(shaderProgram.uAmbientColor, parseFloat(0.9), parseFloat(0.9), parseFloat(0.9));
@@ -115,12 +105,66 @@ Orbital.prototype.drawOrbital = function (isSpinEnabled, gl, shaderProgram, scen
 
     gl.drawElements(gl.TRIANGLES, this.buffers["planetVertexIndexBuffer"].numItems, gl.UNSIGNED_SHORT, 0);
 
+  /*      var m = mat4.create();
+
+    mat4.multiply(m, scene.getMVMatrix(), scene.getPMatrix());
+
+    var x = m[12] ;
+
+    var y = m[13];
+
+    //console.log('x = ' + scene.getMVMatrix()[12] + ', y = ' + scene.getMVMatrix()[13] + ', z = ' + scene.getMVMatrix()[14] )
+
+    var winX =  Math.round((( x + 1 ) / 2.0) * app.getCanvas().width );
+
+    var winY =  Math.round((( 1 - y ) / 2.0) * app.getCanvas().height );  */
+
+
+ /*   var clipSpacePos = vec4.create();
+
+
+
+
+    var point3D = vec4.fromValues(scene.getMVMatrix()[12], scene.getMVMatrix()[13], scene.getMVMatrix()[14], 1);
+
+    //console.log(mat4.str(scene.getMVMatrix()))
+
+    var multiply1 = vec4.create();
+
+    var multiply2 = vec4.create();
+
+    //clipSpacePos = projectionMatrix * (viewMatrix * vec4(point3D, 1.0));
+
+    vec4.transformMat4(multiply1, point3D, scene.getMVMatrix());
+
+    vec4.transformMat4(multiply2, multiply1, scene.getPMatrix());
+
+
+
+    var vector3 = vec3.fromValues((multiply2[0] / multiply2[3]), (multiply2[1] / multiply2[3]), (multiply2[2] / multiply2[3]));
+
+       // console.log(vector3)
+
+    var winX = ((vector3[0] + 1) / 2.0) * app.getCanvas().width;
+
+    var winY = ((vector3[1] + 1) / 2.0) * app.getCanvas().height;
+
+    console.log('screen x = ' + winX + ', screen y = ' + winY ); */
+
+
+
+
     scene.popMVMatrix();
 
     if (this.name === "saturn") {
 
+        // document.getElementById("saturn-label").style.left = winX + 'px';
+      //  document.getElementById("saturn-label").style.top = winY + 'px';
+
         //CG - Push the current matrix for saturn to another stack ready to render the rings of saturn last.
         scene.getLastMatrixStack().push(scene.getMVMatrix());
+
+
 
     }
 
@@ -136,19 +180,13 @@ Orbital.prototype.increaseSpin = function () {
 
         var elapsed = timeNow - this.lastAnimTime;
 
-        if (Config.ellipticalOrbitsActive) {
-
-            this.orbitAngle += ((elapsed * this.initialOrbitRadius * this.initialOrbitRadius * this.orbitVelocity) / (this.orbitRadius * this.orbitRadius)) / 1000.0;
-
-        } else {
-
-            this.orbitAngle += (this.orbitVelocity * elapsed) / 1000.0;
-
-        }
-
         //CG  - Calculate the change in orbit angle, and use this to rotate an elliptical orbit using the orbit velocity.
 
-        this.spinAngle += (this.spinVelocity * elapsed) / 1000.0;
+        this.orbitAngle += Config.ellipticalOrbitsActive ? ((elapsed * this.initialOrbitRadius * this.initialOrbitRadius * (this.orbitVelocity * Config.animationSpeed * Config.animationDirection)) / (this.orbitRadius * this.orbitRadius))/ 1000.0 : ((this.orbitVelocity * Config.animationSpeed * Config.animationDirection) / 2 * elapsed) / 1000.0;
+
+
+        this.spinAngle += ((this.spinVelocity * Config.animationSpeed) * elapsed) / 1000.0;
+
     }
 
     this.lastAnimTime = timeNow;

@@ -148,6 +148,8 @@ Scene.prototype.drawScene = function () {
 
     var lightPos = [0.0, 0.0, 0.0, 1.0];
 
+    mat4.translate(this.getMVMatrix(), this.getMVMatrix(), [0, 0, camera.getZoomFactor()]);
+
     var testMat = mat4.clone(this.getMVMatrix());
 
     var currentPos = vec3.create();
@@ -161,6 +163,9 @@ Scene.prototype.drawScene = function () {
 
     // CG - Move based on the user's input.
     mat4.translate(testMat, testMat, [camera.getXPosition(), camera.getYPosition(), camera.getZPosition()]);
+
+    // CG - Handle scene zooming (via mouse wheel events)
+    //mat4.scale(this.getMVMatrix(), this.getMVMatrix(), [camera.getZoomFactor(), camera.getZoomFactor(), camera.getZoomFactor()]);
 
     vec3.transformMat4(currentPos, currentPos, testMat);
 
@@ -191,7 +196,6 @@ Scene.prototype.drawScene = function () {
     gl.bindTexture(gl.TEXTURE_2D, textureCreator.getTextures()["spaceTexture"]);
 
     gl.uniform1i(shaderProgram2.uSampler1, 0);
-    //gl.uniform1i(shaderProgram.uUseMultiTextures, false);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, app.buffers["cubeVertexPositionBuffer"]);
     gl.vertexAttribPointer(shaderProgram2.aVertexPosition, app.buffers["cubeVertexPositionBuffer"].itemSize, gl.FLOAT, false, 0, 0);
@@ -210,6 +214,8 @@ Scene.prototype.drawScene = function () {
 
     //CG - Tell WebGL to switch to use "normal" planet fragment shader.
     gl.useProgram(shaderProgram);
+
+    gl.uniform1i(shaderProgram.uUseLighting, Config.lightingActive);
 
     //CG - Add lighting after we have rendered the skybox.
     if (Config.lightingActive) {
@@ -246,13 +252,11 @@ Scene.prototype.drawScene = function () {
         );
 
         gl.uniform1f(shaderProgram.uMaterialShininess, parseFloat(Config.specularMaterialShineLevel));
+        gl.uniform1f(shaderProgram.uAttenuation, parseFloat(Config.currentAttenuation));
     }
 
     // CG - Push a new matrix for the scene.
     this.pushMVMatrix();
-
-        // CG - Handle scene zooming (via mouse wheel events)
-    mat4.scale(this.getMVMatrix(), this.getMVMatrix(), [camera.getZoomFactor(), camera.getZoomFactor(), camera.getZoomFactor()]);
 
     // CG - Kick off the rendering (start from the Sun and work our way down the tree).
     this.getRootSceneObject().drawOrbital(Config.spinActive, gl, shaderProgram, this);

@@ -40,14 +40,17 @@ Camera.prototype.handleZoom = function(delta) {
     if (delta) {
 
         if (delta > 0) {
-            this.zoom += 0.01;
+
+            this.zoom += 0.25;
+
+            this.zoom = (this.zoom >= Config.cameraZoomLimit) ? Config.cameraZoomLimit : this.zoom;
 
         } else {
-            this.zoom -= 0.01;
 
-            if (this.zoom < 0.01) {
-                this.zoom = 0.1;
-            }
+            this.zoom -= 0.25;
+
+            this.zoom = (this.zoom <= (1-Config.cameraZoomLimit)) ? (1-Config.cameraZoomLimit) : this.zoom;
+
         }
     }
 

@@ -1,7 +1,8 @@
-function TextureCreator(textureNames, textureImages) {
+function TextureCreator(textureNames, textureImages, textureFileURLRoot) {
 
     this.textureNames = textureNames;
     this.textureImages = textureImages;
+    this.textureFileURLRoot = textureFileURLRoot;
     this.textureCollection = this.initialiseTextures(app.getGL());
 
 }
@@ -22,7 +23,7 @@ TextureCreator.prototype.initialiseTextures = function (gl) {
             }
         })(i, this, textures);
 
-        textures[this.textureNames[i]].image.src = this.textureImages[i];
+        textures[this.textureNames[i]].image.src = this.textureFileURLRoot + this.textureImages[i];
 
     }
 

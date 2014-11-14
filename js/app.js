@@ -16,7 +16,7 @@ OrreryApp.prototype.init = function() {
 
     this.initialiseBuffers(Config.shaderBuffers);
 
-    this.textureCreator = new TextureCreator(Config.textureNames, Config.textureImages);
+    this.textureCreator = new TextureCreator(Config.textureNames, Config.textureImages, Config.textureFileURLRoot);
 
     this.camera = new Camera();
 

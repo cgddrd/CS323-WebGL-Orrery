@@ -1,11 +1,13 @@
 <html>
 
 <head>
-<title>CS323 - Orrery</title>
-<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+    <title>OrbitalJS - Connor Luke Goddard</title>
+    <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
 
-<script type="text/javascript" src="js/gl-matrix-2.2.1.min.js"></script>
-<script type="text/javascript" src="js/webgl-utils.js"></script>
+    <script type="text/javascript" src="js/external/jquery/jquery.js"></script>
+    <script type="text/javascript" src="js/jquery-ui.min.js"></script>
+    <script type="text/javascript" src="js/gl-matrix-2.2.1.min.js"></script>
+    <script type="text/javascript" src="js/webgl-utils.js"></script>
 
     <script type="text/javascript" src="js/config.js"></script>
     <script type="text/javascript" src="js/utils.js"></script>
@@ -16,143 +18,200 @@
     <script type="text/javascript" src="js/scene.js"></script>
     <script type="text/javascript" src="js/app.js"></script>
 
-<script id="shader-fs" type="x-shader/x-fragment">
+    <script id="shader-fs" type="x-shader/x-fragment">
+        precision mediump float;
 
+        varying vec2 vTextureCoord1;
+        varying vec2 vTextureCoord2;
+        varying vec3 vTransformedNormal;
+        varying vec4 vPosition;
 
-    precision mediump float;
+        uniform float uMaterialShininess;
 
-    varying vec2 vTextureCoord1;
-    varying vec2 vTextureCoord2;
-    varying vec3 vTransformedNormal;
-    varying vec4 vPosition;
+        uniform float uAttenuation;
 
-    uniform float uMaterialShininess;
+        uniform bool uUseLighting;
+        uniform bool uUseMultiTextures;
 
-    uniform bool uUseMultiTextures;
+        uniform vec3 uAmbientColor;
 
-    uniform vec3 uAmbientColor;
+        uniform vec3 uPointLightingLocation;
+        uniform vec3 uPointLightingSpecularColor;
+        uniform vec3 uPointLightingDiffuseColor;
 
-    uniform vec3 uPointLightingLocation;
-    uniform vec3 uPointLightingSpecularColor;
-    uniform vec3 uPointLightingDiffuseColor;
+        uniform sampler2D uSampler1;
+        uniform sampler2D uSampler2;
+        uniform sampler2D uSampler3;
 
-    uniform sampler2D uSampler1;
-    uniform sampler2D uSampler2;
-    uniform sampler2D uSampler3;
+        uniform float uAlpha;
 
-    uniform float uAlpha;
+        void main(void) {
+            vec3 lightWeighting;
 
-    void main(void) {
-        vec3 lightWeighting;
+            vec3 lightDirection = normalize(uPointLightingLocation.xyz - vPosition.xyz);
+            vec3 normal = normalize(vTransformedNormal);
 
-        vec3 lightDirection = normalize(uPointLightingLocation.xyz - vPosition.xyz);
-        vec3 normal = normalize(vTransformedNormal);
+            vec4 planetTexture = texture2D(uSampler1, vec2(vTextureCoord1.s, vTextureCoord1.t));
+            vec4 earthNightTexture = texture2D(uSampler3, vec2(vTextureCoord1.s, vTextureCoord1.t));
+            vec4 earthCloudTexture = texture2D(uSampler2, vec2(vTextureCoord2.s, vTextureCoord2.t));
 
-        vec4 dayColor = texture2D(uSampler1, vec2(vTextureCoord1.s, vTextureCoord1.t));
-        vec4 nightColor = texture2D(uSampler3, vec2(vTextureCoord1.s, vTextureCoord1.t));
-        vec4 cloudColor = texture2D(uSampler2, vec2(vTextureCoord2.s, vTextureCoord2.t));
+            float d = length(uPointLightingLocation.xyz - vPosition.xyz);
 
-        float d = length(uPointLightingLocation.xyz - vPosition.xyz);
-        float attenuation = min((1.0/(0.0001 + (0.0001 * d) + (0.0001 * (d*d)))), 1.0);
+            float attenuation = min((1.0 / (0.0001 + (0.0001 * d) + (uAttenuation * (d * d)))), 1.0);
 
+            float specularLightWeighting = 1.0;
 
-        //CG - Cheap hack to prevent the attenuation going weird when we zoom (scale) in and out.
-        attenuation = clamp(attenuation, 0.5, 0.8);
+            //Ramp this up to make the difference between day and night more noticable.
+            float diffusePower = 1.0;
 
-        float specularLightWeighting = 0.0;
+            vec3 eyeDirection = normalize(-vPosition.xyz);
+            vec3 reflectionDirection = reflect(-lightDirection, normal);
 
-        //Ramp this up to make the difference between day and night more noticable.
-        float diffusePower = 1.0;
+            specularLightWeighting = pow(max(dot(reflectionDirection, eyeDirection), 0.0), uMaterialShininess);
 
-        vec3 eyeDirection = normalize(-vPosition.xyz);
-        vec3 reflectionDirection = reflect(-lightDirection, normal);
+            float diffuseLightWeighting = max(dot(normalize(normal), lightDirection), 0.0);
 
-        specularLightWeighting = pow(max(dot(reflectionDirection, eyeDirection), 0.0), uMaterialShininess);
+            diffuseLightWeighting = clamp(diffuseLightWeighting * diffusePower, -1.0, 1.0);
 
-        float diffuseLightWeighting = max(dot(normalize(normal), lightDirection), 0.0);
+            vec3 earthTextureColor = mix(earthNightTexture.rgb, planetTexture.rgb, diffuseLightWeighting);
 
-        diffuseLightWeighting = clamp(diffuseLightWeighting * diffusePower, -1.0, 1.0);
+            if (!uUseLighting) {
+                lightWeighting = vec3(1.0, 1.0, 1.0);
+            } else {
+                 lightWeighting = ((uAmbientColor * attenuation) + ((uPointLightingSpecularColor * attenuation) * specularLightWeighting) + ((uPointLightingDiffuseColor * attenuation) * diffuseLightWeighting));
+            }
 
-        vec3 color = mix(nightColor.rgb, dayColor.rgb, diffuseLightWeighting);
+            if (uUseMultiTextures) {
 
-        lightWeighting = ((uAmbientColor * attenuation) + ((uPointLightingSpecularColor * attenuation) * specularLightWeighting) + ((uPointLightingDiffuseColor * attenuation) * diffuseLightWeighting));
+                gl_FragColor = vec4((earthTextureColor + (earthCloudTexture.rgb * earthCloudTexture.a)) * lightWeighting, planetTexture.a);
 
-        vec4 fragmentColor1;
-        vec4 fragmentColor2;
-        vec4 fragmentColor3;
+            } else {
 
-        fragmentColor1 = texture2D(uSampler1, vec2(vTextureCoord1.s, vTextureCoord1.t));
+                gl_FragColor = vec4(planetTexture.rgb * lightWeighting, planetTexture.a);
 
-        fragmentColor2 = texture2D(uSampler2, vec2(vTextureCoord2.s, vTextureCoord2.t));
+            }
+        }
+    </script>
 
-        fragmentColor3 = texture2D(uSampler3, vec2(vTextureCoord1.s, vTextureCoord1.t));
+    <script id="shader-fs-skybox" type="x-shader/x-fragment">
+        precision mediump float;
 
-        if (uUseMultiTextures) {
+        varying vec2 vTextureCoord1;
 
-            //gl_FragColor = vec4((fragmentColor1.rgb * (fragmentColor1.a - fragmentColor2.a) + fragmentColor2.rgb * fragmentColor2.a) * lightWeighting, fragmentColor1.a * 1.0);
+        uniform sampler2D uSampler1;
 
-            gl_FragColor = vec4((color + (fragmentColor2.rgb * fragmentColor2.a)) * lightWeighting, dayColor.a);
+        void main(void) {
 
-        } else {
+            vec4 fragmentColor1 = texture2D(uSampler1, vec2(vTextureCoord1.s, vTextureCoord1.t));
 
-            gl_FragColor = vec4(fragmentColor1.rgb * lightWeighting, fragmentColor1.a * 1.0);
+            gl_FragColor = vec4(fragmentColor1.rgb, fragmentColor1.a);
+
 
         }
-    }
-</script>
+    </script>
 
-<script id="shader-fs-skybox" type="x-shader/x-fragment">
+    <script id="shader-vs" type="x-shader/x-vertex">
+        attribute vec3 aVertexPosition;
+        attribute vec3 aVertexNormal;
+        attribute vec2 aTextureCoord1;
 
-    precision mediump float;
+        uniform mat4 uMVMatrix;
+        uniform mat4 uPMatrix;
+        uniform mat3 uNMatrix;
+        uniform mat4 uTMatrix;
 
-    varying vec2 vTextureCoord1;
+        varying vec2 vTextureCoord1;
+        varying vec2 vTextureCoord2;
+        varying vec3 vTransformedNormal;
+        varying vec4 vPosition;
 
-    uniform sampler2D uSampler1;
+        void main(void) {
+            vPosition = uMVMatrix * vec4(aVertexPosition, 1.0);
+            gl_Position = uPMatrix * vPosition;
+            vTextureCoord1 = aTextureCoord1;
+            vTextureCoord2 = (uTMatrix * vec4(aTextureCoord1, 0.0, 1.0)).xy;
+            vTransformedNormal = uNMatrix * aVertexNormal;
+        }
+    </script>
 
-    void main(void) {
-
-        vec4 fragmentColor1 = texture2D(uSampler1, vec2(vTextureCoord1.s, vTextureCoord1.t));
-
-        gl_FragColor = vec4(fragmentColor1.rgb, fragmentColor1.a);
-
-
-    }
-
-</script>
-
-<script id="shader-vs" type="x-shader/x-vertex">
-
-    attribute vec3 aVertexPosition;
-    attribute vec3 aVertexNormal;
-    attribute vec2 aTextureCoord1;
-
-    uniform mat4 uMVMatrix;
-    uniform mat4 uPMatrix;
-    uniform mat3 uNMatrix;
-    uniform mat4 uTMatrix;
-
-    varying vec2 vTextureCoord1;
-    varying vec2 vTextureCoord2;
-    varying vec3 vTransformedNormal;
-    varying vec4 vPosition;
-
-    void main(void) {
-        vPosition = uMVMatrix * vec4(aVertexPosition, 1.0);
-        gl_Position = uPMatrix * vPosition;
-        vTextureCoord1 = aTextureCoord1;
-        vTextureCoord2 = (uTMatrix * vec4(aTextureCoord1, 0.0, 1.0)).xy;
-        vTransformedNormal = uNMatrix * aVertexNormal;
-    }
-
-</script>
-    
-<script src="js/webgl-logic.js"></script>
-<link rel="stylesheet" type="text/css" href="css/style.css"> 
+    <script src="js/app-start.js"></script>
+    <link rel="stylesheet" type="text/css" href="css/jquery-ui.min.css">
+    <link rel="stylesheet" type="text/css" href="css/jquery-ui.structure.min.css">
+    <link rel="stylesheet" type="text/css" href="css/jquery-ui.theme.min.css">
+    <link rel="stylesheet" type="text/css" href="css/style.css">
 </head>
 
 
-<body onload="webGLStart();">
-    <canvas id="lesson12-canvas" style="border: none;" width="500" height="500"></canvas>
+<body onload="appStart();">
+
+    <div id="header">
+        <div id="header-container">
+            <div id="title">Orbital<span class="bold">JS</span></div>
+            <div id="controls">
+
+                <div class="control-container">
+                    <h2>Lighting</h2>
+
+                    <div class="slider-container">
+                        <p>Ambient Lighting</p>
+                        <div id="ambient-slider"></div>
+                    </div>
+
+                    <div class="slider-container">
+                        <p>Diffuse Lighting</p>
+                        <div id="diffuse-slider"></div>
+                    </div>
+
+                    <div class="slider-container">
+                        <p>Specular Lighting</p>
+                        <div id="specular-slider"></div>
+                    </div>
+
+                    <div class="slider-container">
+                        <p>Attenuation</p>
+                        <div id="attenuation-slider"></div>
+                    </div>
+
+                    <a id="toggle-lighting" class="button">Disable Lighting</a>
+                </div>
+
+                <div class="control-container">
+                    <h2>Orbits</h2>
+
+                    <div id="eccentricity-control" class="slider-container">
+                        <p>Eccentricity</p>
+                        <div id="eccentricity-slider"></div>
+                    </div>
+
+                    <a id="toggle-orbit" class="button">Circular</a>
+
+                </div>
+
+                <div class="control-container">
+                    <h2>Animation</h2>
+
+                    <div class="slider-container">
+                        <p>Direction</p>
+                        <div id="direction-slider"></div>
+                    </div>
+
+                    <div class="slider-container">
+                        <p>Speed</p>
+                        <div id="velocity-slider"></div>
+                    </div>
+
+                    <a id="toggle-animation" class="button">Pause</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <canvas id="app-canvas" style="border: none;" width="500" height="500"></canvas>
+
+    <!-- <div id="saturn-label">Saturn</div> -->
+
+    <div id="footer">&copy; Connor Luke Goddard 2014. All rights reserved.</div>
+
 </body>
 
 </html>

@@ -15,7 +15,87 @@ EventManager.prototype.init = function(canvas) {
     window.onmousewheel = document.onmousewheel = this.handleMouseWheel.bind(this);
     document.onkeydown = this.handleKeyDown.bind(this);
     document.onkeyup = this.handleKeyUp.bind(this);
+
+    $( "#eccentricity-slider" ).on("slide", function( event, ui ) {
+        Config.currentOrbitEccentricity = ui.value;
+    } );
+
+    $( "#attenuation-slider" ).on("slide", function( event, ui ) {
+        Config.currentAttenuation = ui.value;
+    } );
+
+    $( "#ambient-slider" ).on("slide", function( event, ui ) {
+        Config.ambientLightingColor = ui.value;
+    } );
+
+    $( "#diffuse-slider" ).on("slide", function( event, ui ) {
+        Config.diffuseLightingColor = ui.value;
+    } );
+
+    $( "#specular-slider" ).on("slide", function( event, ui ) {
+        Config.specularLightingColor = ui.value;
+    } );
+
+    $( "#velocity-slider" ).on("slide", function( event, ui ) {
+        Config.animationSpeed = ui.value;
+    } );
+
+    $( "#direction-slider" ).on("slide", function( event, ui ) {
+        Config.animationDirection = ui.value;
+    } );
+
+    $( "#toggle-animation" ).on("click", function( event, ui ) {
+
+
+        Config.spinActive = Config.spinActive ? false : true;
+
+        if (Config.spinActive) {
+            $(this).text("Pause");
+            $(this).css("background-color", "rgba(36,36,36,0.8)");
+        } else {
+            $(this).text("Play");
+            $(this).css("background-color", "rgba(80,80,80,0.8)");
+        }
+
+    } );
+
+    $( "#toggle-orbit" ).on("click", function( event, ui ) {
+
+
+        Config.ellipticalOrbitsActive = Config.ellipticalOrbitsActive ? false : true;
+
+        $("#eccentricity-slider").slider( "option", "disabled", !Config.ellipticalOrbitsActive);
+
+        if (Config.ellipticalOrbitsActive) {
+            $(this).text("Circular");
+            $(this).css("background-color", "rgba(36,36,36,0.8)");
+        } else {
+            $(this).text("Elliptical");
+            $(this).css("background-color", "rgba(80,80,80,0.8)");
+        }
+
+    } );
+
+    $( "#toggle-lighting" ).on("click", function( event, ui ) {
+
+        Config.lightingActive = Config.lightingActive ? false : true;
+
+        $("#ambient-slider").slider( "option", "disabled", !Config.lightingActive);
+        $("#diffuse-slider").slider( "option", "disabled", !Config.lightingActive);
+        $("#specular-slider").slider( "option", "disabled", !Config.lightingActive);
+        $("#attenuation-slider").slider( "option", "disabled", !Config.lightingActive);
+
+        if (Config.lightingActive) {
+            $(this).text("Disable Lighting");
+            $(this).css("background-color", "rgba(36,36,36,0.8)");
+        } else {
+            $(this).text("Enable Lighting");
+            $(this).css("background-color", "rgba(80,80,80,0.8)");
+        }
+
+    } );
 }
+
 
 EventManager.prototype.handleKeyDown = function(event) {
 
@@ -76,26 +156,26 @@ EventManager.prototype.handleKeys = function() {
 
     if (this.currentlyPressedKeys[69]) {
         // E
-        this.camera.setZPosition(this.camera.getZPosition() -= 0.5);
+        this.camera.setZPosition(this.camera.z -= 0.5);
     }
     if (this.currentlyPressedKeys[87]) {
         // W
-        this.camera.setZPosition(this.camera.getZPosition() += 0.5);
+        this.camera.setZPosition(this.camera.z += 0.5);
     }
     if (this.currentlyPressedKeys[37]) {
         // Left cursor key
-        this.camera.setXPosition(this.camera.getXPosition() += 0.5);
+        this.camera.setXPosition(this.camera.x += 0.5);
     }
     if (this.currentlyPressedKeys[39]) {
         // Right cursor key
-        this.camera.setXPosition(this.camera.getXPosition() -= 0.5);
+        this.camera.setXPosition(this.camera.x -= 0.5);
     }
     if (this.currentlyPressedKeys[38]) {
         // Up cursor key
-        this.camera.setYPosition(this.camera.getYPosition() -= 0.5);
+        this.camera.setYPosition(this.camera.y -= 0.5);
     }
     if (this.currentlyPressedKeys[40]) {
         // Down cursor key
-        this.camera.setYPosition(this.camera.getYPosition() += 0.5);
+        this.camera.setYPosition(this.camera.y += 0.5);
     }
 }

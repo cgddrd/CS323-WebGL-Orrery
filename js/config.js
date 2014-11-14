@@ -1,12 +1,14 @@
 var Config  = {
 
+    textureFileURLRoot: "images/textures/",
+
     textureNames: ["spaceTexture", "marsTexture", "earthTexture", "sunTexture", "moonTexture", "cloudsTexture", "mercuryTexture", "venusTexture", "jupiterTexture", "saturnTexture", "uranusTexture", "neptuneTexture", "saturnRingTexture", "earthNightTexture"],
 
     textureImages: ["space.jpg", "marsmap1k.jpg", "earthmap1k.jpg", "sunmap.jpg", "moon.gif", "cloudimage.png", "mercurymap.jpg", "venusmap.jpg", "jupitermap.jpg", "saturnmap.jpg", "uranusmap.jpg", "neptunemap.jpg", "ringsRGBA.png", "earthlights1k.jpg"],
 
     shaderAttributes: ["aVertexPosition", "aTextureCoord1", "aVertexNormal"],
 
-    shaderUniforms: ["uPMatrix", "uMVMatrix", "uTMatrix", "uNMatrix", "uSampler1", "uSampler2", "uSampler3", "uUseLighting", "uMaterialShininess", "uUseMultiTextures", "uAmbientColor", "uPointLightingLocation", "uPointLightingSpecularColor", "uPointLightingDiffuseColor"],
+    shaderUniforms: ["uPMatrix", "uMVMatrix", "uTMatrix", "uNMatrix", "uSampler1", "uSampler2", "uSampler3", "uUseLighting", "uMaterialShininess", "uUseMultiTextures", "uAmbientColor", "uPointLightingLocation", "uPointLightingSpecularColor", "uPointLightingDiffuseColor", "uAttenuation"],
 
     skyboxShaderAttributes: ["aVertexPosition", "aTextureCoord1", "aVertexNormal"],
 
@@ -14,7 +16,7 @@ var Config  = {
 
     shaderBuffers: ["planetVertexPositionBuffer", "planetVertexNormalBuffer", "planetVertexTextureCoordBuffer", "planetVertexIndexBuffer", "cubeVertexIndexBuffer", "cubeVertexPositionBuffer", "cubeVertexTextureCoordBuffer", "squareVertexPositionBuffer", "squareVertexTextureCoordBuffer"],
 
-    startZoom: 50,
+    startZoom: 100,
 
     spinActive: true,
 
@@ -22,17 +24,29 @@ var Config  = {
 
     ellipticalOrbitsActive: true,
 
-    ambientLightingColor: 0.4,
+    ambientLightingColor: 0.2,
 
     diffuseLightingColor: 0.8,
 
-    specularLightingColor: 0.2,
+    specularLightingColor: 0.3,
 
     specularMaterialShineLevel: 10,
 
     cloudRotationSpeed: 0.1,
 
+    currentOrbitEccentricity: 0.5,
+
+    currentAttenuation: 0.0001,
+
     cameraAxisRotation: false,
+
+    cameraZoomLimit: 40,
+
+    animationSpeed: 1,
+
+    animationDirection : 1,
+
+    scaleFactor: 1,
 
     scenePlanets: [
 
@@ -54,7 +68,7 @@ var Config  = {
             scaleFactor: 0.3,
             orbitVelocity: 120,
             orbitRadius: -10,
-            orbitEccentricity: 0.5
+            orbitEccentricity: 0.6
 
         },
 
@@ -64,7 +78,7 @@ var Config  = {
             scaleFactor: 0.5,
             orbitVelocity: 110,
             orbitRadius: -30,
-            orbitEccentricity: 0.5
+            orbitEccentricity: 0.6
 
         },
 
@@ -74,7 +88,7 @@ var Config  = {
             scaleFactor: 0,
             orbitVelocity: 100,
             orbitRadius: -50,
-            orbitEccentricity: 0.5,
+            orbitEccentricity: 0.6,
             children: ["moon"]
 
         },
@@ -82,11 +96,11 @@ var Config  = {
         {
             name: "moon",
             spinVelocity: 30,
-            scaleFactor: 0.2,
-            orbitVelocity: 1000,
-            orbitRadius: -5,
-            orbitEccentricity: 0.5,
-            tilt: 45
+            scaleFactor: 0.4,
+            orbitVelocity: 500,
+            orbitRadius: -10,
+            orbitEccentricity: 0.6,
+            tilt: 40
 
         },
 
@@ -96,7 +110,7 @@ var Config  = {
             scaleFactor: 0,
             orbitVelocity: 90,
             orbitRadius: -70,
-            orbitEccentricity: 0.5
+            orbitEccentricity: 0.6
 
         },
 
@@ -106,7 +120,7 @@ var Config  = {
             scaleFactor: 2.5,
             orbitVelocity: 50,
             orbitRadius: -100,
-            orbitEccentricity: 0.5
+            orbitEccentricity: 0.6
 
         },
 
@@ -126,7 +140,7 @@ var Config  = {
             scaleFactor: 1.5,
             orbitVelocity: 20,
             orbitRadius: -160,
-            orbitEccentricity: 0.5
+            orbitEccentricity: 0.6
 
         },
 
@@ -136,7 +150,7 @@ var Config  = {
             scaleFactor: 1.3,
             orbitVelocity: 10,
             orbitRadius: -180,
-            orbitEccentricity: 0.5
+            orbitEccentricity: 0.6
 
         }
 
