@@ -38,7 +38,7 @@ var Config  = {
 
     currentAttenuation: 0.0001,
 
-    cameraAxisRotation: false,
+    cameraAxisRotation: true,
 
     cameraZoomLimit: 40,
 
