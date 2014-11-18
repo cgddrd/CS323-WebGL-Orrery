@@ -1,15 +1,26 @@
+/**
+ * Provides "main" application functions that cannot be feasibly seperated into a specfic module of functionality and access point for "shared" objects (e.g. WebGl reference, 'Scene', 'Camera' 'EventManager etc..)
+ * @constructor
+ * @author Connor Goddard [clg11@aber.ac.uk]
+ * @param {DOM object} canvas - Reference to HTML5 DOM 'Canvas' object used for mouse interaction.
+ *
+ * Portions of this code have been modified from original code available at: http://learningwebgl.com/blog/?p=571
+ */
 function OrreryApp(canvas) {
     this.gl;
     this.buffers = {};
     this.scene;
     this.camera;
     this.eventManager;
-    this.shaderProgram;
-    this.shaderProgram2;
+    this.mainShaderProgram;
+    this.skyboxShaderProgram;
     this.textureCreator;
     this.canvas = canvas;
 }
 
+/**
+ * Performs main application initialisation process, including initialising many core application "modules" including 'TextureCreator', 'Scene', 'Camera' and WebGL shader programs.
+ */
 OrreryApp.prototype.init = function() {
 
     this.initGL(this.canvas);
@@ -22,31 +33,50 @@ OrreryApp.prototype.init = function() {
 
     this.eventManager = new EventManager();
 
-    this.shaderProgram = this.initShaders("shader-fs", "shader-vs", Config.shaderAttributes, Config.shaderUniforms);
+    //Set-up the "main" shader program with WebGL.
+    this.mainShaderProgram = this.initShaders("shader-fs", "shader-vs", Config.shaderAttributes, Config.shaderUniforms);
 
-    this.shaderProgram2 = this.initShaders("shader-fs-skybox", "shader-vs", Config.skyboxShaderAttributes, Config.skyboxShaderUniforms);
+    //Set-up the dedicated skybox shader program with WebGL.
+    this.skyboxShaderProgram = this.initShaders("shader-fs-skybox", "shader-vs", Config.skyboxShaderAttributes, Config.skyboxShaderUniforms);
 
     this.scene = new Scene();
 
+    //Set-up the scene - Create the scene-graph etc.
     this.scene.setupScene(this);
 
     this.gl.clearColor(0.0, 0.0, 0.0, 1.0);
     this.gl.enable(this.gl.DEPTH_TEST);
 
+    //Trigger main application (re-)rendering loop.
     this.tick();
 }
 
+/**
+ * Performs the continous re-rendering of the scene. (Main application loop)
+ */
 OrreryApp.prototype.tick = function() {
+
+    //Begin a new application rendering cycle.
     requestAnimFrame(this.tick.bind(this));
+
+    //Handle any key input from the user.
     this.eventManager.handleKeys();
+
+    //Process any changes to the scene and re-draw.
     this.scene.drawScene(this);
 }
 
+/**
+ * Initialises the WebGl library via the HTML5 'Canvas' object.
+ * @param {DOM object} canvas - Reference to HTML5 DOM 'Canvas' object used for mouse interaction.
+ */
 OrreryApp.prototype.initGL = function(canvas) {
 
+    //Set the HTML5 canvas width and height to size of the current web browser window (force full-screen canvas)
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
+    //Attempt to get a reference to the WebGL library within the browser.
     try {
         this.gl = canvas.getContext("experimental-webgl");
         this.gl.viewportWidth = canvas.width;
@@ -55,16 +85,27 @@ OrreryApp.prototype.initGL = function(canvas) {
     } catch (e) {}
 
     if (!this.gl) {
-        alert("Could not initialise WebGL, sorry :-(");
+        alert("Could not initialise WebGL. Please ensure you are using an up-to-date browser.");
     }
 }
 
+/**
+ * Creates and initialises all references to WebGl shader 'attribute' and 'uniform' variables for use within the application.
+ * @param {string} fragmentShaderID - ID of the DOM containing the WebGL fragment shader code for the current shader program.
+ * @param {string} vertexShaderID - ID of the DOM containing the WebGL vertex shader code for the current shader program.
+ * @param {string[]} shaderAttributes - Array of WebGL shader 'attribute' variables to be referenced and initialised for use within the application.
+ * @param {string[]} shaderUniforms - Array of WebGL shader 'uniform' variables to be referenced and initialised for use within the application.
+ */
 OrreryApp.prototype.initShaders = function (fragmentShaderID, vertexShaderID, shaderAttributes, shaderUniforms) {
 
+    //Get the GLSL shader code for the fragment and vertex shaders.
     var fragmentShader = this.getShader(fragmentShaderID);
     var vertexShader = this.getShader(vertexShaderID);
 
+    //Create a new WebGL shader program.
     var shaderProgram = this.gl.createProgram();
+
+    //Add the GLSL code to the new shader program.
     this.gl.attachShader(shaderProgram, vertexShader);
     this.gl.attachShader(shaderProgram, fragmentShader);
     this.gl.linkProgram(shaderProgram);
@@ -75,29 +116,47 @@ OrreryApp.prototype.initShaders = function (fragmentShaderID, vertexShaderID, sh
 
     this.gl.useProgram(shaderProgram);
 
+    //Set-up the references to the WebGL shader 'attribute' and 'uniform' variables.
     this.initialiseShaderAttributes(shaderProgram, shaderAttributes);
-
     this.initialiseShaderUniforms(shaderProgram, shaderUniforms);
 
     return shaderProgram;
 
 }
 
+/**
+ * Creates references to WebGl shader 'attribute' variables for use within the application.
+ * @param {object} shaderProgram - Reference to WebGL shader program whose attributes are to be referenced in the application.
+ * @param {string[]} shaderAttributes - Array of WebGL shader 'attribute' variables to be referenced and initialised for use within the application. (Taken from configuration file (Config.js))
+ */
 OrreryApp.prototype.initialiseShaderAttributes = function (shaderProgram, shaderAttributes) {
+
+    //Loop through each of the provided shader 'attribute' variable names, creating a reference in the application and initialising with WebGL.
     for (var i = 0, max = shaderAttributes.length; i < max; i++) {
         shaderProgram[shaderAttributes[i]] = this.gl.getAttribLocation(shaderProgram, shaderAttributes[i]);
         this.gl.enableVertexAttribArray(shaderProgram[shaderAttributes[i]]);
     }
 }
 
+/**
+ * Creates references to WebGl shader 'uniform' variables for use within the application.
+ * @param {object} shaderProgram - Reference to WebGL shader program whose attributes are to be referenced in the application.
+ * @param {string[]} shaderUniforms - Array of WebGL shader 'uniform' variables to be referenced and initialised for use within the application. (Taken from configuration file (Config.js))
+ */
 OrreryApp.prototype.initialiseShaderUniforms = function (shaderProgram, shaderUniforms) {
     for (var i = 0, max = shaderUniforms.length; i < max; i++) {
         shaderProgram[shaderUniforms[i]] = this.gl.getUniformLocation(shaderProgram, shaderUniforms[i]);
     }
 }
 
+/**
+ * Extracts and returns the GLSL shader code from the specified HTML DOM element.
+ * @param {string} id - ID of the HTML DOM element containing the required GLSL shader code.
+ */
 OrreryApp.prototype.getShader = function (id) {
+
     var shaderScript = document.getElementById(id);
+
     if (!shaderScript) {
         return null;
     }
@@ -112,6 +171,7 @@ OrreryApp.prototype.getShader = function (id) {
     }
 
     var shader;
+
     if (shaderScript.type == "x-shader/x-fragment") {
         shader = this.gl.createShader(this.gl.FRAGMENT_SHADER);
     } else if (shaderScript.type == "x-shader/x-vertex") {
@@ -131,8 +191,15 @@ OrreryApp.prototype.getShader = function (id) {
     return shader;
 }
 
+/**
+ * Initialises and creates all WebGL position, normal and index buffers for all geometric shapes required within the application. (Sphere, cube and square).
+ * @param {string[]} shaderBuffers - Collection of buffer keys to be used to initialise the buffer values within WebGL and reference in the application.
+ *
+ * Portions of this function have been modified from original code available at: http://learningwebgl.com/blog/?p=1253 and http://learningwebgl.com/blog/?p=370
+ */
 OrreryApp.prototype.initialiseBuffers = function (shaderBuffers) {
 
+    //Create a new object for each buffer specified in the application configuration file (Config.js)
     for (var i = 0, max = shaderBuffers.length; i < max; i++) {
 
         this.buffers[shaderBuffers[i]] = {};
@@ -343,42 +410,64 @@ OrreryApp.prototype.initialiseBuffers = function (shaderBuffers) {
 
 }
 
+/**
+ * Returns the collection of WebGL buffers.
+ */
 OrreryApp.prototype.getBuffers = function() {
     return this.buffers;
 }
 
+/**
+ * Returns the application reference to the WebGL library.
+ */
 OrreryApp.prototype.getGL = function() {
     return this.gl;
 }
 
+/**
+ * Returns the instance of the application 'Camera' object.
+ */
 OrreryApp.prototype.getCamera = function() {
     return this.camera;
 }
 
-OrreryApp.prototype.getShaderProgram = function() {
-    return this.shaderProgram;
+/**
+ * Returns the instance of the "main" WebGL shader program.
+ */
+OrreryApp.prototype.getMainShaderProgram = function() {
+    return this.mainShaderProgram;
 }
 
-OrreryApp.prototype.getShaderProgram2 = function() {
-    return this.shaderProgram2;
+/**
+ * Returns the instance of the dedicated WebGL shader program for the scene skybox.
+ */
+OrreryApp.prototype.getSkyboxShaderProgram = function() {
+    return this.skyboxShaderProgram;
 }
 
+/**
+ * Returns the instance of the application 'Scene' object.
+ */
 OrreryApp.prototype.getScene = function() {
     return this.scene;
 }
 
+/**
+ * Returns the instance of the application 'TextureCreator' object.
+ */
 OrreryApp.prototype.getTextureCreator = function() {
     return this.textureCreator;
 }
 
+/**
+ * Returns the instance of the application 'EventManager' object.
+ */
 OrreryApp.prototype.getEventManager = function() {
     return this.eventManager;
 }
-
-OrreryApp.prototype.getTextureCreator = function() {
-    return this.textureCreator;
-}
-
+/**
+ * Returns the instance of the HTML5 'Canvas' element.
+ */
 OrreryApp.prototype.getCanvas = function() {
     return this.canvas;
 }

@@ -1,5 +1,10 @@
+//Single global object to provide access to main application logic.
 var app;
 
+/**
+ * Application "main method" / bootstrap function. Set's up the jQuery UI sliders for control panel before initialising application.
+ * @author Connor Goddard [clg11@aber.ac.uk]
+ */
 function appStart() {
 
     $( "#eccentricity-slider" ).slider({ min: 0.0, max: 1.0, step: 0.1, value: Config.currentOrbitEccentricity });

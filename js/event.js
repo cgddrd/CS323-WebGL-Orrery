@@ -1,12 +1,24 @@
+/**
+ * Handles all of the events triggered by user input within the application.
+ * @constructor
+ * @author Connor Goddard [clg11@aber.ac.uk]
+ *
+ * Portions of this code have been modified from original code available at: http://learningwebgl.com/blog/?p=571
+ */
 function EventManager() {
 
     this.currentlyPressedKeys = {};
     this.mouseDown = false;
     this.camera = app.getCamera();
 
+    //Initialise the event handlers.
     this.init(app.getCanvas());
 }
 
+/**
+ * Initialises all of the mouse, keyboard and UI slider event handlers for the application.
+ * @param {DOM object} canvas - Reference to HTML5 DOM 'Canvas' object used for mouse interaction.
+ */
 EventManager.prototype.init = function(canvas) {
 
     canvas.onmousedown = this.handleMouseDown.bind(this);
@@ -16,6 +28,7 @@ EventManager.prototype.init = function(canvas) {
     document.onkeydown = this.handleKeyDown.bind(this);
     document.onkeyup = this.handleKeyUp.bind(this);
 
+    //Setup jQuery UI slider widget event handlers.
     $( "#eccentricity-slider" ).on("slide", function( event, ui ) {
         Config.currentOrbitEccentricity = ui.value;
     } );
@@ -48,6 +61,9 @@ EventManager.prototype.init = function(canvas) {
 
 
         Config.spinActive = Config.spinActive ? false : true;
+
+        $("#velocity-slider").slider( "option", "disabled", !Config.spinActive);
+        $("#direction-slider").slider( "option", "disabled", !Config.spinActive);
 
         if (Config.spinActive) {
             $(this).text("Pause");
@@ -96,26 +112,36 @@ EventManager.prototype.init = function(canvas) {
     } );
 }
 
-
+/**
+ * Handles key down events, processing specific letter key commands individually.
+ * @param {event} event - Keyboard event to be processed.
+ */
 EventManager.prototype.handleKeyDown = function(event) {
 
+    //Activate the handling of commands for the current key being pressed.
     this.currentlyPressedKeys[event.keyCode] = true;
 
-    if (String.fromCharCode(event.keyCode) == "S" && Config.spinActive == true) {
-        Config.spinActive  = false;
-    } else if (String.fromCharCode(event.keyCode) == "S" && Config.spinActive == false) {
-        Config.spinActive = true;
+    //If the 'S' key is pressed, fire the event handler for the "toggle animation" UI control. ('S' key is an alias for this event.)
+    if (String.fromCharCode(event.keyCode) == "S") {
+        $( "#toggle-animation" ).trigger( "click" );
     }
 
-    if (String.fromCharCode(event.keyCode) == "G") {
-        this.camera.goHome();
-    }
 }
 
+/**
+ * Handles key up events for the application.
+ * @param {event} event - Keyboard event to be processed.
+ */
 EventManager.prototype.handleKeyUp = function(event) {
+
+    //Disable the processing of commands for keys that are no longer being pressed.
     this.currentlyPressedKeys[event.keyCode] = false;
 }
 
+/**
+ * Handles mouse move events, in particular handling scene rotations in repsponse to mouse movements.
+ * @param {event} event - Mouse event to be processed.
+ */
 EventManager.prototype.handleMouseMove = function(event) {
 
     if (!this.mouseDown) {
@@ -125,15 +151,27 @@ EventManager.prototype.handleMouseMove = function(event) {
     this.camera.handleRotation(event.clientX, event.clientY)
 }
 
+/**
+ * Handles mouse down events, in particular handling scene rotations in repsponse to mouse movements.
+ * @param {event} event - Mouse event to be processed.
+ */
 EventManager.prototype.handleMouseDown = function(event) {
     this.mouseDown = true;
     this.camera.handleMouseCoords(event.clientX, event.clientY);
 }
 
+/**
+ * Handles mouse up events.
+ * @param {event} event - Mouse event to be processed.
+ */
 EventManager.prototype.handleMouseUp = function(event) {
     this.mouseDown = false;
 }
 
+/**
+ * Handles mouse wheel events, in particular handling scene zooming based on the mouse wheel scroll position.
+ * @param {event} event - Mouse event to be processed.
+ */
 EventManager.prototype.handleMouseWheel = function(event) {
 
     var delta = 0;
@@ -152,6 +190,9 @@ EventManager.prototype.handleMouseWheel = function(event) {
 
 }
 
+/**
+ * Handles firing events for specific keyboard keys, in particular handling scene translations and scene zooming.
+ */
 EventManager.prototype.handleKeys = function() {
 
     if (this.currentlyPressedKeys[69]) {

@@ -1,7 +1,7 @@
 <html>
 
 <head>
-    <title>OrbitalJS - Connor Luke Goddard</title>
+    <title>OrbitalJS - CS32310 Assignment - Connor Luke Goddard</title>
     <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
 
     <script type="text/javascript" src="js/external/jquery/jquery.js"></script>
@@ -18,6 +18,7 @@
     <script type="text/javascript" src="js/scene.js"></script>
     <script type="text/javascript" src="js/app.js"></script>
 
+    <!-- Main WebGL fragment shader. Supports Phong lighting model (ambient, diffuse and specular terms) plus attentuation and multi-texturing (including animated textures). -->
     <script id="shader-fs" type="x-shader/x-fragment">
         precision mediump float;
 
@@ -46,6 +47,7 @@
         uniform float uAlpha;
 
         void main(void) {
+
             vec3 lightWeighting;
 
             vec3 lightDirection = normalize(uPointLightingLocation.xyz - vPosition.xyz);
@@ -59,41 +61,54 @@
 
             float attenuation = min((1.0 / (0.0001 + (0.0001 * d) + (uAttenuation * (d * d)))), 1.0);
 
-            float specularLightWeighting = 1.0;
-
-            //Ramp this up to make the difference between day and night more noticable.
+            //Increase diffuse power to make the difference between day and night more noticable.
             float diffusePower = 1.0;
 
             vec3 eyeDirection = normalize(-vPosition.xyz);
             vec3 reflectionDirection = reflect(-lightDirection, normal);
 
-            specularLightWeighting = pow(max(dot(reflectionDirection, eyeDirection), 0.0), uMaterialShininess);
+            //Calculate the specular light term weighting taking into account the material "shininess".
+            float specularLightWeighting = pow(max(dot(reflectionDirection, eyeDirection), 0.0), uMaterialShininess);
 
+            //Calculate the diffuse light term weighting.
             float diffuseLightWeighting = max(dot(normalize(normal), lightDirection), 0.0);
-
             diffuseLightWeighting = clamp(diffuseLightWeighting * diffusePower, -1.0, 1.0);
 
+            //linearly interpolate between the two day and night textures for the Earth.
             vec3 earthTextureColor = mix(earthNightTexture.rgb, planetTexture.rgb, diffuseLightWeighting);
 
+
+            //Check if we wish to use the Phong lighting model..
             if (!uUseLighting) {
+
+                //If not, simply set an ambient term to full brightness.
                 lightWeighting = vec3(1.0, 1.0, 1.0);
+
             } else {
-                 lightWeighting = ((uAmbientColor * attenuation) + ((uPointLightingSpecularColor * attenuation) * specularLightWeighting) + ((uPointLightingDiffuseColor * attenuation) * diffuseLightWeighting));
+
+                //Otherwise, calculate the lighting conditions for the given fragment, taking into account the three terms of the Phong lighting model and the light attentuation.
+                lightWeighting = ((uAmbientColor * attenuation) + ((uPointLightingSpecularColor * attenuation) * specularLightWeighting) + ((uPointLightingDiffuseColor * attenuation) * diffuseLightWeighting));
+
             }
 
+            //Check if we are applying multiple textures to an object.. (in this case only the Earth)
             if (uUseMultiTextures) {
 
+                //If so apply the multiple textures (The Earth day/night combination calculated earlier and the cloud texture)
                 gl_FragColor = vec4((earthTextureColor + (earthCloudTexture.rgb * earthCloudTexture.a)) * lightWeighting, planetTexture.a);
 
             } else {
 
+                //Otherwise only apply the single texture.
                 gl_FragColor = vec4(planetTexture.rgb * lightWeighting, planetTexture.a);
 
             }
         }
     </script>
 
+    <!-- Dedicated fragment shader for the scene 'sky-box'. Only uses a very simple lighting model (ambient term only) -->
     <script id="shader-fs-skybox" type="x-shader/x-fragment">
+
         precision mediump float;
 
         varying vec2 vTextureCoord1;
@@ -101,6 +116,8 @@
         uniform sampler2D uSampler1;
 
         void main(void) {
+
+            //Apply the single texture using only an ambient lighting term.
 
             vec4 fragmentColor1 = texture2D(uSampler1, vec2(vTextureCoord1.s, vTextureCoord1.t));
 
@@ -110,6 +127,7 @@
         }
     </script>
 
+    <!-- WebGL vertex shader. Used by both fragment shaders. -->
     <script id="shader-vs" type="x-shader/x-vertex">
         attribute vec3 aVertexPosition;
         attribute vec3 aVertexNormal;
@@ -126,10 +144,20 @@
         varying vec4 vPosition;
 
         void main(void) {
+
+            //Calculate current vertex position and pass to fragment shader.
             vPosition = uMVMatrix * vec4(aVertexPosition, 1.0);
+
+            //Set current position to draw.
             gl_Position = uPMatrix * vPosition;
+
+            //Set main texture coordinates.
             vTextureCoord1 = aTextureCoord1;
+
+            //Set secondary texture coordinates applying any transforms from the texture transform matrix (used to rotate clouds around the Earth).
             vTextureCoord2 = (uTMatrix * vec4(aTextureCoord1, 0.0, 1.0)).xy;
+
+            //Calculate the surface normal.
             vTransformedNormal = uNMatrix * aVertexNormal;
         }
     </script>
@@ -207,8 +235,6 @@
     </div>
 
     <canvas id="app-canvas" style="border: none;" width="500" height="500"></canvas>
-
-    <!-- <div id="saturn-label">Saturn</div> -->
 
     <div id="footer">&copy; Connor Luke Goddard 2014. All rights reserved.</div>
 

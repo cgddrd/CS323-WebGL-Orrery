@@ -1,3 +1,7 @@
+/**
+ * Provides global point of access for application configuration settings and values.
+ * @author Connor Goddard [clg11@aber.ac.uk]
+ */
 var Config  = {
 
     textureFileURLRoot: "images/textures/",
@@ -38,7 +42,7 @@ var Config  = {
 
     currentAttenuation: 0.0001,
 
-    cameraAxisRotation: true,
+    cameraAxisRotation: false,
 
     cameraZoomLimit: 40,
 
@@ -48,6 +52,7 @@ var Config  = {
 
     scaleFactor: 1,
 
+    //Collection of configuration settings for each of the required scene-objects (planets, stars and moons)
     scenePlanets: [
 
         {
