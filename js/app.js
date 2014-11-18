@@ -78,7 +78,9 @@ OrreryApp.prototype.initGL = function(canvas) {
 
     //Attempt to get a reference to the WebGL library within the browser.
     try {
-        this.gl = canvas.getContext("experimental-webgl");
+
+        //Use cross-compatible approach to initialising WebGl reference.
+        this.gl = WebGLUtils.setupWebGL(canvas);
         this.gl.viewportWidth = canvas.width;
         this.gl.viewportHeight = canvas.height;
 
