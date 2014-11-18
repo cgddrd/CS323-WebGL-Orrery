@@ -2,6 +2,8 @@
  * Represents the application scene (containing scene objects)
  * @constructor
  * @author Connor Goddard [clg11@aber.ac.uk]
+ *
+ * Portions of this code have been modified from original code available at: http://learningwebgl.com/blog/?p=370
  */
 function Scene() {
 
