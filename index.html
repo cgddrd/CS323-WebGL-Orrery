@@ -20,6 +20,9 @@
 
     <!-- Main WebGL fragment shader. Supports Phong lighting model (ambient, diffuse and specular terms) plus attentuation and multi-texturing (including animated textures). -->
     <script id="shader-fs" type="x-shader/x-fragment">
+
+        //This fragment shader code has been modified from original code available at: http://learningwebgl.com/blog/?p=370
+
         precision mediump float;
 
         varying vec2 vTextureCoord1;
@@ -57,8 +60,10 @@
             vec4 earthNightTexture = texture2D(uSampler3, vec2(vTextureCoord1.s, vTextureCoord1.t));
             vec4 earthCloudTexture = texture2D(uSampler2, vec2(vTextureCoord2.s, vTextureCoord2.t));
 
-            float d = length(uPointLightingLocation.xyz - vPosition.xyz);
+            //Calculate the attenuation factor using constant, linear and quadratric constants.
+            //Based on original code from "Beginning WebGL for HTML5", B. Danchilla, Apress Publishing, 2012.
 
+            float d = length(uPointLightingLocation.xyz - vPosition.xyz);
             float attenuation = min((1.0 / (0.0001 + (0.0001 * d) + (uAttenuation * (d * d)))), 1.0);
 
             //Increase diffuse power to make the difference between day and night more noticable.
@@ -129,6 +134,9 @@
 
     <!-- WebGL vertex shader. Used by both fragment shaders. -->
     <script id="shader-vs" type="x-shader/x-vertex">
+
+        //This vertex shader code has been modified from original code available at: http://learningwebgl.com/blog/?p=370
+
         attribute vec3 aVertexPosition;
         attribute vec3 aVertexNormal;
         attribute vec2 aTextureCoord1;

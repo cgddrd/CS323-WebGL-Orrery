@@ -88,6 +88,7 @@ span.bold {
 #controls {
     float: left;
     overflow: hidden;
+    width: 85%;
 }
 
 div.control-container {
@@ -98,7 +99,7 @@ div.control-container {
 
 .ui-slider {
    /*  margin-left: 5px !important; */
-    width: 100px !important;
+    width: 50px !important;
     background-color: #eee !important;
     height: 5px !important;
     display: inline-block;
